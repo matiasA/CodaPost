@@ -49,11 +49,14 @@ class Coda_Post {
             if ($post_id) {
                 add_post_meta($post_id, '_coda_post_generated', '1', true);
                 $this->logger->info("Borrador creado exitosamente. ID: $post_id");
+                error_log("Coda Post: Borrador creado con ID $post_id");
             } else {
                 $this->logger->error('Error al crear el borrador');
+                error_log("Coda Post: Error al crear el borrador");
             }
         } else {
             $this->logger->error('No se pudo generar contenido');
+            error_log("Coda Post: No se pudo generar contenido");
         }
     }
 }

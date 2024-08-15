@@ -20,6 +20,17 @@ class Post_Preview {
 
         if (empty($draft_posts)) {
             echo '<p>No hay posts generados para revisar.</p>';
+            // Añadir esta sección para depuración
+            echo '<h2>Información de depuración:</h2>';
+            echo '<pre>';
+            $all_drafts = get_posts(array('post_status' => 'draft', 'posts_per_page' => -1));
+            echo "Total de borradores: " . count($all_drafts) . "\n";
+            echo "Borradores con meta '_coda_post_generated': " . count($draft_posts) . "\n";
+            foreach ($all_drafts as $draft) {
+                $meta = get_post_meta($draft->ID, '_coda_post_generated', true);
+                echo "ID: {$draft->ID}, Título: {$draft->post_title}, Meta '_coda_post_generated': " . ($meta ? $meta : 'No presente') . "\n";
+            }
+            echo '</pre>';
         } else {
             foreach ($draft_posts as $post) {
                 $this->display_post_preview($post);

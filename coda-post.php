@@ -23,3 +23,11 @@ function run_coda_post() {
 }
 
 run_coda_post();
+
+// Añade esto después de run_coda_post();
+add_action('init', function() {
+    if (isset($_GET['test_coda_post'])) {
+        do_action('coda_post_create_draft');
+        die('Acción coda_post_create_draft ejecutada');
+    }
+});
