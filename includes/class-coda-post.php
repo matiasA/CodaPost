@@ -3,35 +3,12 @@
 class Coda_Post {
     private $logger;
 
-    public function __construct() {
-        $this->load_dependencies();
-        $this->logger = new Coda_Logger();
-        add_action('wp_ajax_generate_post_ajax', array($this, 'generate_post_ajax'));
-        add_action('wp_ajax_nopriv_generate_post_ajax', array($this, 'generate_post_ajax'));
+    public function __construct($logger) {
+        $this->logger = $logger;
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('coda_post_create_draft', array($this, 'create_automated_draft'));
         add_action('wp_ajax_coda_post_publish', array($this, 'ajax_publish_post'));
         add_action('wp_ajax_coda_post_delete', array($this, 'ajax_delete_post'));
-        coda_post_log('Coda Post: Hooks configurados');
-    }
-
-    public function run() {
-        $this->set_hooks();
-        coda_post_log('Coda Post plugin initialized');
-    }
-
-    private function load_dependencies() {
-        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-coda-logger.php';
-        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-content-generator.php';
-        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-openai-generator.php';
-        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-post-publisher.php';
-        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-admin-page.php';
-        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-post-preview.php';
-    }
-
-    private function set_hooks() {
-        add_action('admin_menu', array($this, 'add_admin_menu'));
-        add_action('coda_post_create_draft', array($this, 'create_automated_draft'));
         coda_post_log('Coda Post: Hooks configurados');
     }
 
@@ -89,12 +66,10 @@ class Coda_Post {
             wp_send_json_error(array('message' => 'Permisos insuficientes.'));
         }
 
-        ob_start();
-        $result = $this->create_automated_draft();
-        $log = ob_get_clean();
+        $post_id = $this->create_automated_draft();
 
-        if ($result) {
-            wp_send_json_success(array('message' => 'Post generado exitosamente', 'post_id' => $result));
+        if ($post_id) {
+            wp_send_json_success(array('message' => 'Post generado exitosamente', 'post_id' => $post_id));
         } else {
             wp_send_json_error(array('message' => 'No se pudo generar el post.'));
         }
@@ -147,4 +122,7 @@ class Coda_Post {
         if (!$result) {
             wp_send_json_error(array('message' => 'Error al eliminar el post.'));
         } else {
+            wp_send_json_success(array('message' => 'Post eliminado exitosamente.'));
+        }
+    }
 }
