@@ -1,6 +1,6 @@
 <?php
 
-require_once 'interface-ai-generator.php';
+require_once plugin_dir_path(__FILE__) . 'interface-ai-generator.php';
 
 class OpenAI_Generator implements AI_Generator {
     private $api_key;
