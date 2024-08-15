@@ -7,23 +7,25 @@ class Post_Publisher {
         $this->logger = $logger;
     }
 
-    public function publish_post($content, $status = 'draft') {
+    public function publish_post($title, $content, $excerpt, $status = 'draft') {
+        $this->logger->info("Post Publisher: Iniciando publicación de post");
+        
         $post_data = array(
-            'post_title'    => wp_strip_all_tags($content['title']),
-            'post_content'  => $content['content'],
+            'post_title'    => wp_strip_all_tags($title),
+            'post_content'  => $content,
+            'post_excerpt'  => $excerpt,
             'post_status'   => $status,
-            'post_author'   => 1,
-            'post_excerpt'  => wp_strip_all_tags($content['excerpt']),
+            'post_type'     => 'post',
         );
 
         $post_id = wp_insert_post($post_data);
 
-        if (is_wp_error($post_id)) {
-            $this->logger->error('Error al publicar el post: ' . $post_id->get_error_message());
+        if ($post_id) {
+            $this->logger->info("Post Publisher: Post creado exitosamente con ID: $post_id");
+            return $post_id;
+        } else {
+            $this->logger->error("Post Publisher: Error al crear el post");
             return false;
         }
-
-        $this->logger->info('Post publicado exitosamente. ID: ' . $post_id);
-        return $post_id;
     }
 }
