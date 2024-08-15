@@ -63,7 +63,7 @@ class Admin_Page {
     }
 
     public function display_review_page() {
-        $post_preview = new Post_Preview();
+        $post_preview = new Post_Preview($this->logger);
         $post_preview->display_preview();
     }
 
