@@ -38,39 +38,35 @@ class Coda_Post {
     public function create_automated_draft() {
         $this->logger->info('Coda Post: Iniciando create_automated_draft');
         
-        try {
-            $api_key = get_option('coda_post_openai_api_key', '');
-            if (empty($api_key)) {
-                $this->logger->error('Coda Post: API key no configurada');
-                return false;
-            }
+        $api_key = get_option('coda_post_openai_api_key', '');
+        if (empty($api_key)) {
+            $this->logger->error('Coda Post: API key no configurada');
+            return false;
+        }
 
-            $model = get_option('coda_post_openai_model', 'gpt-4o-mini');
-            $this->logger->info("Coda Post: API key configurada, iniciando generación de contenido con modelo $model");
-            $openai_generator = new OpenAI_Generator($api_key, $this->logger, $model);
-            $generator = new Content_Generator($openai_generator, $this->logger);
-            
-            $structure = get_option('coda_post_structure', 'parrafos');
-            $content_type = get_option('coda_post_content_type', 'tecnologia');
-            
-            $content = $generator->generate_content($structure, $content_type);
+        $this->logger->info('Coda Post: API key configurada, iniciando generación de contenido');
+        $openai_generator = new OpenAI_Generator($api_key, $this->logger, 'gpt-4o-mini');
+        $generator = new Content_Generator($openai_generator, $this->logger);
+        
+        // Obtener la estructura y el tipo de contenido
+        $structure = isset($_POST['post_structure']) ? sanitize_text_field($_POST['post_structure']) : 'parrafos';
+        $content_type = isset($_POST['content_type']) ? sanitize_text_field($_POST['content_type']) : 'tecnologia';
+        
+        $content = $generator->generate_content($structure, $content_type);
 
-            if ($content) {
-                $this->logger->info('Coda Post: Contenido generado, intentando publicar');
-                $publisher = new Post_Publisher($this->logger);
-                $post_id = $publisher->publish_post($content, 'draft');
-                if ($post_id) {
-                    add_post_meta($post_id, '_coda_post_generated', '1', true);
-                    $this->logger->info("Coda Post: Borrador creado exitosamente. ID: $post_id");
-                    return $post_id;
-                } else {
-                    $this->logger->error("Coda Post: Error al crear el borrador");
-                }
+        if ($content) {
+            $this->logger->info('Coda Post: Contenido generado, intentando publicar');
+            $publisher = new Post_Publisher($this->logger);
+            $post_id = $publisher->publish_post($content, 'draft');
+            if ($post_id) {
+                add_post_meta($post_id, '_coda_post_generated', '1', true);
+                $this->logger->info("Coda Post: Borrador creado exitosamente. ID: $post_id");
+                return $post_id;
             } else {
-                $this->logger->error("Coda Post: No se pudo generar contenido");
+                $this->logger->error("Coda Post: Error al crear el borrador");
             }
-        } catch (Exception $e) {
-            $this->logger->error("Coda Post: Excepción capturada: " . $e->getMessage());
+        } else {
+            $this->logger->error("Coda Post: No se pudo generar contenido");
         }
 
         return false;

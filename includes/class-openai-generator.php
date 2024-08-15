@@ -5,14 +5,16 @@ require_once plugin_dir_path(__FILE__) . 'interface-ai-generator.php';
 class OpenAI_Generator implements AI_Generator {
     private $api_key;
     private $logger;
+    private $model;
 
     public function __construct($api_key, $logger) {
         $this->api_key = $api_key;
         $this->logger = $logger;
+        $this->model = 'gpt-4o-mini'; // Actualizado al modelo más reciente
     }
 
     public function generate_content($prompt) {
-        $this->logger->info("OpenAI: Iniciando generación de contenido");
+        $this->logger->info("OpenAI: Iniciando generación de contenido con modelo {$this->model}");
         $url = 'https://api.openai.com/v1/chat/completions';
 
         $headers = [
@@ -21,12 +23,12 @@ class OpenAI_Generator implements AI_Generator {
         ];
 
         $data = [
-            'model' => 'gpt-4o-mini',
+            'model' => $this->model,
             'messages' => [
                 ['role' => 'system', 'content' => 'Eres un asistente útil que genera contenido para blogs.'],
                 ['role' => 'user', 'content' => $prompt]
             ],
-            'max_tokens' => 500,
+            'max_tokens' => 1000,
             'temperature' => 0.7,
         ];
 

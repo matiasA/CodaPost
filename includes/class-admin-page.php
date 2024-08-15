@@ -151,11 +151,11 @@ class Admin_Page {
         echo '<input type="text" id="openai_api_key" name="openai_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
         echo '</div>';
 
-        $model = get_option('coda_post_openai_model', 'gpt-4-1106-preview');
+        $model = get_option('coda_post_openai_model', 'gpt-4o-mini');
         echo '<div class="coda-post-form-group">';
         echo '<label for="openai_model">Modelo de OpenAI:</label>';
         echo '<select name="openai_model" id="openai_model">';
-        echo '<option value="gpt-4-1106-preview"' . selected($model, 'gpt-4-1106-preview', false) . '>GPT-4 Turbo</option>';
+        echo '<option value="gpt-4o-mini"' . selected($model, 'gpt-4o-mini', false) . '>gpt-4o-mini (más reciente)</option>';
         echo '<option value="gpt-4"' . selected($model, 'gpt-4', false) . '>GPT-4</option>';
         echo '<option value="gpt-3.5-turbo-1106"' . selected($model, 'gpt-3.5-turbo-1106', false) . '>GPT-3.5 Turbo</option>';
         echo '</select>';
