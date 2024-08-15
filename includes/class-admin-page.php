@@ -90,15 +90,16 @@ class Admin_Page {
                         nonce: '<?php echo wp_create_nonce('generate_post_nonce'); ?>'
                     },
                     success: function(response) {
+                        console.log('Respuesta AJAX:', response);
                         if (response.success) {
                             addConsoleMessage('Post generado exitosamente. ID: ' + response.data.post_id);
                         } else {
-                            addConsoleMessage('Error: ' + response.data.message);
+                            addConsoleMessage('Error: ' + (response.data ? response.data.message : 'Respuesta inesperada del servidor'));
                         }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
+                        console.log('Error AJAX:', jqXHR, textStatus, errorThrown);
                         addConsoleMessage('Error de conexión al servidor. Estado: ' + textStatus + ', Error: ' + errorThrown);
-                        console.log(jqXHR);
                     }
                 });
             });

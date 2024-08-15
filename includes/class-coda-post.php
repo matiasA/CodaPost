@@ -36,32 +36,35 @@ class Coda_Post {
     }
 
     public function create_automated_draft() {
-        echo "Iniciando create_automated_draft\n";
+        error_log('Coda Post: Iniciando create_automated_draft');
         
         $api_key = get_option('coda_post_openai_api_key', '');
         if (empty($api_key)) {
-            echo "API key no configurada\n";
-            return;
+            error_log('Coda Post: API key no configurada');
+            return false;
         }
 
-        echo "API key configurada, iniciando generación de contenido\n";
+        error_log('Coda Post: API key configurada, iniciando generación de contenido');
         $openai_generator = new OpenAI_Generator($api_key, $this->logger);
         $generator = new Content_Generator($openai_generator, $this->logger);
         $content = $generator->generate_content();
 
         if ($content) {
-            echo "Contenido generado, intentando publicar\n";
+            error_log('Coda Post: Contenido generado, intentando publicar');
             $publisher = new Post_Publisher($this->logger);
             $post_id = $publisher->publish_post($content, 'draft');
             if ($post_id) {
                 add_post_meta($post_id, '_coda_post_generated', '1', true);
-                echo "Borrador creado exitosamente. ID: $post_id\n";
+                error_log("Coda Post: Borrador creado exitosamente. ID: $post_id");
+                return $post_id;
             } else {
-                echo "Error al crear el borrador\n";
+                error_log("Coda Post: Error al crear el borrador");
             }
         } else {
-            echo "No se pudo generar contenido\n";
+            error_log("Coda Post: No se pudo generar contenido");
         }
+
+        return false;
     }
 
     public function generate_post_ajax() {
@@ -72,16 +75,13 @@ class Coda_Post {
         }
 
         ob_start();
-        $this->create_automated_draft();
+        $result = $this->create_automated_draft();
         $log = ob_get_clean();
 
-        $lines = explode("\n", trim($log));
-        foreach ($lines as $line) {
-            if (!empty($line)) {
-                wp_send_json_success(array('message' => $line));
-            }
+        if ($result) {
+            wp_send_json_success(array('message' => 'Post generado exitosamente', 'post_id' => $result));
+        } else {
+            wp_send_json_error(array('message' => 'No se pudo generar el post.'));
         }
-
-        wp_send_json_error(array('message' => 'No se pudo generar el post.'));
     }
 }
