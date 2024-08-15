@@ -33,10 +33,10 @@ class OpenAI_Generator implements AI_Generator {
         $data = [
             'model' => $this->model,
             'messages' => [
-                ['role' => 'system', 'content' => 'Eres un asistente útil que genera contenido para blogs.'],
+                ['role' => 'system', 'content' => 'Eres un periodista especializado que genera contenido para blogs.'],
                 ['role' => 'user', 'content' => $prompt]
             ],
-            'max_tokens' => 1000,
+            'max_tokens' => 2000,
             'temperature' => 0.7,
         ];
 

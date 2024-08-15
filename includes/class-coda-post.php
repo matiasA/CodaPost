@@ -53,13 +53,14 @@ class Coda_Post {
         // Obtener la estructura y el tipo de contenido
         $structure = isset($_POST['post_structure']) ? sanitize_text_field($_POST['post_structure']) : 'parrafos';
         $content_type = isset($_POST['content_type']) ? sanitize_text_field($_POST['content_type']) : 'tecnologia';
-        
-        $content = $generator->generate_content($structure, $content_type);
 
-        if ($content) {
+        $generated_content = $generator->generate_content($structure, $content_type);
+
+        if ($generated_content) {
             $this->logger->info('Coda Post: Contenido generado, intentando publicar');
             $publisher = new Post_Publisher($this->logger);
-            $post_id = $publisher->publish_post($content, 'draft');
+            $post_content = $generated_content['content'] . "\n\n" . $generated_content['key_points'];
+            $post_id = $publisher->publish_post($generated_content['title'], $post_content, $generated_content['excerpt'], 'draft');
             if ($post_id) {
                 add_post_meta($post_id, '_coda_post_generated', '1', true);
                 $this->logger->info("Coda Post: Borrador creado exitosamente. ID: $post_id");

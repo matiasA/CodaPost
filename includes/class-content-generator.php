@@ -13,36 +13,32 @@ class Content_Generator {
     public function generate_content($structure, $content_type) {
         $this->logger->info("Content Generator: Iniciando generación de contenido");
         $current_year = date('Y');
-        $title_prompt = "Genera un título interesante y actual (del año $current_year) para un artículo de blog sobre $content_type.";
-        $this->logger->info("Content Generator: Generando título");
-        $title = $this->ai_generator->generate_content($title_prompt);
-
-        if (!$title) {
-            $this->logger->error("Content Generator: No se pudo generar el título");
-            return false;
-        }
-
-        $this->logger->info("Content Generator: Título generado: $title");
-
-        $content_prompt = "Escribe un artículo de blog detallado y actualizado (del año $current_year) sobre el siguiente título: $title. 
-        El artículo debe tener aproximadamente 300 palabras y seguir esta estructura: $structure. 
-        Incluye datos recientes y tendencias actuales sobre $content_type.";
         
-        $this->logger->info("Content Generator: Generando contenido principal");
-        $content = $this->ai_generator->generate_content($content_prompt);
+        $prompt = "Eres un periodista especializado en $content_type. Quiero que escribas un artículo de máximo 1500 palabras en español al estilo del New York Times. El artículo debe tener obligatoriamente un título y al final 3 puntos clave para entender el tema. El artículo debe seguir esta estructura: $structure. Incluye datos recientes y tendencias actuales del año $current_year sobre $content_type.";
 
-        if (!$content) {
+        $this->logger->info("Content Generator: Generando contenido completo");
+        $full_content = $this->ai_generator->generate_content($prompt);
+
+        if (!$full_content) {
             $this->logger->error("Content Generator: No se pudo generar el contenido");
             return false;
         }
 
-        // Truncar el contenido si excede el límite
-        if (strlen($content) > $this->max_content_length) {
-            $content = substr($content, 0, $this->max_content_length);
-            $content = rtrim($content, ".\n") . "..."; // Asegurar que el contenido termine con una oración completa
+        // Extraer el título, contenido principal y puntos clave
+        $parts = explode("\n", $full_content, 2);
+        $title = trim($parts[0]);
+        $main_content = trim($parts[1]);
+
+        // Extraer los puntos clave
+        $key_points_start = strrpos($main_content, "Puntos clave:");
+        $key_points = "";
+        if ($key_points_start !== false) {
+            $key_points = substr($main_content, $key_points_start);
+            $main_content = trim(substr($main_content, 0, $key_points_start));
         }
 
-        $excerpt_prompt = "Genera un resumen corto de 50 palabras para el siguiente artículo: $content";
+        // Generar el extracto
+        $excerpt_prompt = "Genera un resumen corto de 50 palabras para el siguiente artículo: $main_content";
         $excerpt = $this->ai_generator->generate_content($excerpt_prompt);
 
         if (!$excerpt) {
@@ -52,8 +48,9 @@ class Content_Generator {
 
         return [
             'title' => $title,
-            'content' => $content,
+            'content' => $main_content,
             'excerpt' => $excerpt,
+            'key_points' => $key_points
         ];
     }
 }
