@@ -27,7 +27,9 @@ run_coda_post();
 // Añade esto después de run_coda_post();
 add_action('init', function() {
     if (isset($_GET['test_coda_post'])) {
+        error_log('Coda Post: Iniciando test_coda_post');
         do_action('coda_post_create_draft');
+        error_log('Coda Post: Finalizando test_coda_post');
         die('Acción coda_post_create_draft ejecutada');
     }
 });
