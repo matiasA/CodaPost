@@ -12,7 +12,7 @@ class OpenAI_Generator implements AI_Generator {
     }
 
     public function generate_content($prompt) {
-        echo "Iniciando generación de contenido con OpenAI\n";
+        $this->logger->info("OpenAI: Iniciando generación de contenido");
         $url = 'https://api.openai.com/v1/chat/completions';
 
         $headers = [
@@ -26,11 +26,11 @@ class OpenAI_Generator implements AI_Generator {
                 ['role' => 'system', 'content' => 'Eres un asistente útil que genera contenido para blogs.'],
                 ['role' => 'user', 'content' => $prompt]
             ],
-            'max_tokens' => 500, // Ajustar según sea necesario
+            'max_tokens' => 500,
             'temperature' => 0.7,
         ];
 
-        echo "Enviando solicitud a OpenAI\n";
+        $this->logger->info("OpenAI: Enviando solicitud a la API");
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -41,7 +41,7 @@ class OpenAI_Generator implements AI_Generator {
         $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if (curl_errno($ch)) {
-            echo "Error en la solicitud cURL: " . curl_error($ch) . "\n";
+            $this->logger->error("OpenAI: Error en la solicitud cURL: " . curl_error($ch));
             curl_close($ch);
             return false;
         }
@@ -49,18 +49,18 @@ class OpenAI_Generator implements AI_Generator {
         curl_close($ch);
 
         if ($http_status != 200) {
-            echo "Error en la API de OpenAI. Código de estado: $http_status\n";
+            $this->logger->error("OpenAI: Error en la API. Código de estado: $http_status, Respuesta: $response");
             return false;
         }
 
         $result = json_decode($response, true);
 
         if (isset($result['choices'][0]['message']['content'])) {
-            echo "Contenido generado exitosamente\n";
+            $this->logger->info("OpenAI: Contenido generado exitosamente");
             return $result['choices'][0]['message']['content'];
         }
 
-        echo "Respuesta inesperada de la API de OpenAI\n";
+        $this->logger->error("OpenAI: Respuesta inesperada de la API: " . print_r($result, true));
         return false;
     }
 }

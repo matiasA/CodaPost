@@ -11,23 +11,28 @@ class Content_Generator {
     }
 
     public function generate_content($structure, $content_type) {
+        $this->logger->info("Content Generator: Iniciando generación de contenido");
         $current_year = date('Y');
         $title_prompt = "Genera un título interesante y actual (del año $current_year) para un artículo de blog sobre $content_type.";
+        $this->logger->info("Content Generator: Generando título");
         $title = $this->ai_generator->generate_content($title_prompt);
 
         if (!$title) {
-            $this->logger->error("No se pudo generar el título");
+            $this->logger->error("Content Generator: No se pudo generar el título");
             return false;
         }
+
+        $this->logger->info("Content Generator: Título generado: $title");
 
         $content_prompt = "Escribe un artículo de blog detallado y actualizado (del año $current_year) sobre el siguiente título: $title. 
         El artículo debe tener aproximadamente 300 palabras y seguir esta estructura: $structure. 
         Incluye datos recientes y tendencias actuales sobre $content_type.";
         
+        $this->logger->info("Content Generator: Generando contenido principal");
         $content = $this->ai_generator->generate_content($content_prompt);
 
         if (!$content) {
-            $this->logger->error("No se pudo generar el contenido");
+            $this->logger->error("Content Generator: No se pudo generar el contenido");
             return false;
         }
 
@@ -41,7 +46,7 @@ class Content_Generator {
         $excerpt = $this->ai_generator->generate_content($excerpt_prompt);
 
         if (!$excerpt) {
-            $this->logger->error("No se pudo generar el resumen");
+            $this->logger->error("Content Generator: No se pudo generar el resumen");
             return false;
         }
 

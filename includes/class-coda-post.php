@@ -36,37 +36,40 @@ class Coda_Post {
     }
 
     public function create_automated_draft() {
-        error_log('Coda Post: Iniciando create_automated_draft');
+        $this->logger->info('Coda Post: Iniciando create_automated_draft');
         
-        $api_key = get_option('coda_post_openai_api_key', '');
-        if (empty($api_key)) {
-            error_log('Coda Post: API key no configurada');
-            return false;
-        }
-
-        error_log('Coda Post: API key configurada, iniciando generación de contenido');
-        $openai_generator = new OpenAI_Generator($api_key, $this->logger);
-        $generator = new Content_Generator($openai_generator, $this->logger);
-        
-        // Obtener la estructura y el tipo de contenido de las opciones o usar valores predeterminados
-        $structure = get_option('coda_post_structure', 'parrafos');
-        $content_type = get_option('coda_post_content_type', 'tecnologia');
-        
-        $content = $generator->generate_content($structure, $content_type);
-
-        if ($content) {
-            error_log('Coda Post: Contenido generado, intentando publicar');
-            $publisher = new Post_Publisher($this->logger);
-            $post_id = $publisher->publish_post($content, 'draft');
-            if ($post_id) {
-                add_post_meta($post_id, '_coda_post_generated', '1', true);
-                error_log("Coda Post: Borrador creado exitosamente. ID: $post_id");
-                return $post_id;
-            } else {
-                error_log("Coda Post: Error al crear el borrador");
+        try {
+            $api_key = get_option('coda_post_openai_api_key', '');
+            if (empty($api_key)) {
+                $this->logger->error('Coda Post: API key no configurada');
+                return false;
             }
-        } else {
-            error_log("Coda Post: No se pudo generar contenido");
+
+            $this->logger->info('Coda Post: API key configurada, iniciando generación de contenido');
+            $openai_generator = new OpenAI_Generator($api_key, $this->logger);
+            $generator = new Content_Generator($openai_generator, $this->logger);
+            
+            $structure = get_option('coda_post_structure', 'parrafos');
+            $content_type = get_option('coda_post_content_type', 'tecnologia');
+            
+            $content = $generator->generate_content($structure, $content_type);
+
+            if ($content) {
+                $this->logger->info('Coda Post: Contenido generado, intentando publicar');
+                $publisher = new Post_Publisher($this->logger);
+                $post_id = $publisher->publish_post($content, 'draft');
+                if ($post_id) {
+                    add_post_meta($post_id, '_coda_post_generated', '1', true);
+                    $this->logger->info("Coda Post: Borrador creado exitosamente. ID: $post_id");
+                    return $post_id;
+                } else {
+                    $this->logger->error("Coda Post: Error al crear el borrador");
+                }
+            } else {
+                $this->logger->error("Coda Post: No se pudo generar contenido");
+            }
+        } catch (Exception $e) {
+            $this->logger->error("Coda Post: Excepción capturada: " . $e->getMessage());
         }
 
         return false;
