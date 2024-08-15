@@ -21,7 +21,7 @@ class OpenAI_Generator implements AI_Generator {
         ];
 
         $data = [
-            'model' => 'gpt-3.5-turbo',
+            'model' => 'gpt-4o-mini',
             'messages' => [
                 ['role' => 'system', 'content' => 'Eres un asistente útil que genera contenido para blogs.'],
                 ['role' => 'user', 'content' => $prompt]
