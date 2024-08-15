@@ -124,12 +124,15 @@ class Admin_Page {
             echo '<tbody>';
             while ($generated_posts->have_posts()) {
                 $generated_posts->the_post();
+                $post_id = get_the_ID();
                 echo '<tr>';
                 echo '<td>' . get_the_title() . '</td>';
                 echo '<td>' . get_the_date() . '</td>';
                 echo '<td>';
                 echo '<a href="' . get_edit_post_link() . '" class="button button-small">Editar</a> ';
-                echo '<a href="' . get_preview_post_link() . '" target="_blank" class="button button-small">Vista previa</a>';
+                echo '<a href="' . get_preview_post_link() . '" target="_blank" class="button button-small">Vista previa</a> ';
+                echo '<button class="button button-small publish-post" data-post-id="' . $post_id . '">Publicar</button> ';
+                echo '<button class="button button-small delete-post" data-post-id="' . $post_id . '">Eliminar</button>';
                 echo '</td>';
                 echo '</tr>';
             }
@@ -141,6 +144,62 @@ class Admin_Page {
         wp_reset_postdata();
         
         echo '</div>';
+
+        $this->add_review_scripts();
+    }
+
+    private function add_review_scripts() {
+        ?>
+        <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            $('.publish-post').on('click', function() {
+                var postId = $(this).data('post-id');
+                if (confirm('¿Estás seguro de que quieres publicar este post?')) {
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'coda_post_publish',
+                            post_id: postId,
+                            nonce: '<?php echo wp_create_nonce('coda_post_publish_nonce'); ?>'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                alert('Post publicado exitosamente.');
+                                location.reload();
+                            } else {
+                                alert('Error al publicar el post: ' + response.data.message);
+                            }
+                        }
+                    });
+                }
+            });
+
+            $('.delete-post').on('click', function() {
+                var postId = $(this).data('post-id');
+                if (confirm('¿Estás seguro de que quieres eliminar este post? Esta acción no se puede deshacer.')) {
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'coda_post_delete',
+                            post_id: postId,
+                            nonce: '<?php echo wp_create_nonce('coda_post_delete_nonce'); ?>'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                alert('Post eliminado exitosamente.');
+                                location.reload();
+                            } else {
+                                alert('Error al eliminar el post: ' + response.data.message);
+                            }
+                        }
+                    });
+                }
+            });
+        });
+        </script>
+        <?php
     }
 
     private function display_settings_tab() {

@@ -8,6 +8,11 @@ class Coda_Post {
         $this->logger = new Coda_Logger();
         add_action('wp_ajax_generate_post_ajax', array($this, 'generate_post_ajax'));
         add_action('wp_ajax_nopriv_generate_post_ajax', array($this, 'generate_post_ajax'));
+        add_action('admin_menu', array($this, 'add_admin_menu'));
+        add_action('coda_post_create_draft', array($this, 'create_automated_draft'));
+        add_action('wp_ajax_coda_post_publish', array($this, 'ajax_publish_post'));
+        add_action('wp_ajax_coda_post_delete', array($this, 'ajax_delete_post'));
+        coda_post_log('Coda Post: Hooks configurados');
     }
 
     public function run() {
@@ -94,4 +99,52 @@ class Coda_Post {
             wp_send_json_error(array('message' => 'No se pudo generar el post.'));
         }
     }
+
+    public function ajax_publish_post() {
+        check_ajax_referer('coda_post_publish_nonce', 'nonce');
+
+        if (!current_user_can('publish_posts')) {
+            wp_send_json_error(array('message' => 'No tienes permisos para publicar posts.'));
+        }
+
+        $post_id = intval($_POST['post_id']);
+        $post = get_post($post_id);
+
+        if (!$post || $post->post_status !== 'draft' || !get_post_meta($post_id, '_coda_post_generated', true)) {
+            wp_send_json_error(array('message' => 'Post inválido o no generado por Coda Post.'));
+        }
+
+        $update_post = array(
+            'ID' => $post_id,
+            'post_status' => 'publish'
+        );
+
+        $result = wp_update_post($update_post);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        } else {
+            wp_send_json_success(array('message' => 'Post publicado exitosamente.'));
+        }
+    }
+
+    public function ajax_delete_post() {
+        check_ajax_referer('coda_post_delete_nonce', 'nonce');
+
+        if (!current_user_can('delete_posts')) {
+            wp_send_json_error(array('message' => 'No tienes permisos para eliminar posts.'));
+        }
+
+        $post_id = intval($_POST['post_id']);
+        $post = get_post($post_id);
+
+        if (!$post || !get_post_meta($post_id, '_coda_post_generated', true)) {
+            wp_send_json_error(array('message' => 'Post inválido o no generado por Coda Post.'));
+        }
+
+        $result = wp_delete_post($post_id, true);
+
+        if (!$result) {
+            wp_send_json_error(array('message' => 'Error al eliminar el post.'));
+        } else {
 }

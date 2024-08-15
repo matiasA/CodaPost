@@ -25,6 +25,11 @@ add_action('admin_enqueue_scripts', function($hook) {
     }
     wp_enqueue_style('coda-post-admin-styles', plugin_dir_url(__FILE__) . 'admin/css/admin.css');
     wp_enqueue_script('jquery');
+    wp_enqueue_script('coda-post-admin-scripts', plugin_dir_url(__FILE__) . 'admin/js/admin.js', array('jquery'), '1.0', true);
+    wp_localize_script('coda-post-admin-scripts', 'coda_post_ajax', array(
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('coda_post_ajax_nonce')
+    ));
 });
 
 add_action('wp_ajax_generate_post_ajax', 'coda_post_generate_post_ajax');
