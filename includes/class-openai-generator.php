@@ -13,6 +13,14 @@ class OpenAI_Generator implements AI_Generator {
         $this->model = get_option('coda_post_openai_model', 'gpt-4-0125-preview');
     }
 
+    public function set_model($model) {
+        $this->model = $model;
+    }
+
+    public function get_model() {
+        return $this->model;
+    }
+
     public function generate_content($prompt) {
         $this->logger->info("OpenAI: Iniciando generación de contenido con modelo {$this->model}");
         $url = 'https://api.openai.com/v1/chat/completions';
