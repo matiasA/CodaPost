@@ -134,10 +134,16 @@ class Admin_Page {
         echo '<div class="coda-post-form-group">';
         echo '<label for="image_style">Estilo de imagen:</label>';
         echo '<select name="image_style" id="image_style">';
-        echo '<option value="realista">Realista</option>';
-        echo '<option value="ilustracion">Ilustración</option>';
-        echo '<option value="abstracto">Abstracto</option>';
-        echo '<option value="fotografia">Fotografía</option>';
+        echo '<option value="vivid">Vívido</option>';
+        echo '<option value="natural">Natural</option>';
+        echo '</select>';
+        echo '</div>';
+
+        echo '<div class="coda-post-form-group">';
+        echo '<label for="image_quality">Calidad de imagen:</label>';
+        echo '<select name="image_quality" id="image_quality">';
+        echo '<option value="standard">Estándar</option>';
+        echo '<option value="hd">Alta Definición</option>';
         echo '</select>';
         echo '</div>';
 
@@ -385,7 +391,8 @@ class Admin_Page {
                         writing_style: $('#writing_style').val(),
                         post_length: $('#post_length').val(),
                         generate_image: $('#generate_image').is(':checked') ? 1 : 0,
-                        image_style: $('#image_style').val()
+                        image_style: $('#image_style').val(),
+                        image_quality: $('#image_quality').val()
                     },
                     success: function(response) {
                         if (response.success) {

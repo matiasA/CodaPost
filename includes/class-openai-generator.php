@@ -115,16 +115,19 @@ class OpenAI_Generator implements AI_Generator {
         return false;
     }
 
-    public function generate_image($prompt) {
+    public function generate_image($prompt, $size = '1024x1024', $quality = 'standard', $style = 'vivid') {
         $response = wp_remote_post('https://api.openai.com/v1/images/generations', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->api_key,
                 'Content-Type' => 'application/json',
             ],
             'body' => json_encode([
+                'model' => 'dall-e-3',
                 'prompt' => $prompt,
                 'n' => 1,
-                'size' => '1024x1024',
+                'size' => $size,
+                'quality' => $quality,
+                'style' => $style,
             ]),
         ]);
 
@@ -137,8 +140,9 @@ class OpenAI_Generator implements AI_Generator {
 
         if (isset($body['data'][0]['url'])) {
             return $body['data'][0]['url'];
+        } else {
+            $this->logger->error('Respuesta inesperada de la API de OpenAI: ' . print_r($body, true));
+            return false;
         }
-
-        return false;
     }
 }

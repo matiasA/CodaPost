@@ -45,7 +45,8 @@ class Coda_Post {
         $post_length = isset($_POST['post_length']) ? sanitize_text_field($_POST['post_length']) : 'medio';
 
         $generate_image = isset($_POST['generate_image']) ? true : false;
-        $image_style = isset($_POST['image_style']) ? sanitize_text_field($_POST['image_style']) : 'realista';
+        $image_style = isset($_POST['image_style']) ? sanitize_text_field($_POST['image_style']) : 'vivid';
+        $image_quality = isset($_POST['image_quality']) ? sanitize_text_field($_POST['image_quality']) : 'standard';
 
         $generated_content = $generator->generate_content($structure, $content_type, $writing_style, $post_length);
 
@@ -58,7 +59,7 @@ class Coda_Post {
                 add_post_meta($post_id, '_coda_post_generated', '1', true);
                 
                 if ($generate_image) {
-                    $image_url = $this->generate_and_attach_image($post_id, $generated_content['title'], $image_style);
+                    $image_url = $this->generate_and_attach_image($post_id, $generated_content['title'], $image_style, $image_quality);
                     if ($image_url) {
                         set_post_thumbnail($post_id, $image_url);
                     }
@@ -76,16 +77,21 @@ class Coda_Post {
         return false;
     }
 
-    private function generate_and_attach_image($post_id, $title, $style) {
+    private function generate_and_attach_image($post_id, $title, $style, $quality) {
         $openai = new OpenAI_Generator(get_option('coda_post_openai_api_key'), $this->logger);
-        $prompt = "Genera una imagen $style basada en el siguiente título de artículo: $title";
+        $prompt = "Genera una imagen para un artículo con el siguiente título: $title";
         
-        $image_url = $openai->generate_image($prompt);
+        // Mapear estilos del formulario a los estilos de DALL-E 3
+        $dalle_style = ($style == 'realista' || $style == 'fotografia') ? 'natural' : 'vivid';
+        
+        $image_url = $openai->generate_image($prompt, '1024x1024', $quality, $dalle_style);
         
         if ($image_url) {
             $upload = media_sideload_image($image_url, $post_id, $title, 'id');
             if (!is_wp_error($upload)) {
                 return $upload;
+            } else {
+                $this->logger->error('Error al adjuntar la imagen: ' . $upload->get_error_message());
             }
         }
         
