@@ -38,19 +38,18 @@ class Coda_Post {
         $openai_generator->set_model($model);
         $generator = new Content_Generator($openai_generator, $this->logger);
         
-        // Obtener la estructura, el tipo de contenido y el estilo de escritura
+        // Obtener los parámetros del formulario
         $structure = isset($_POST['post_structure']) ? sanitize_text_field($_POST['post_structure']) : 'parrafos';
         $content_type = isset($_POST['content_type']) ? sanitize_text_field($_POST['content_type']) : 'tecnologia';
-        $writing_styles = get_option('coda_post_writing_styles', ['New York Times', 'BBC News', 'The Economist', 'Scientific American', 'BuzzFeed']);
-        $writing_style = isset($_POST['writing_style']) ? sanitize_text_field($_POST['writing_style']) : $writing_styles[0];
+        $writing_style = isset($_POST['writing_style']) ? sanitize_text_field($_POST['writing_style']) : 'Formal';
+        $post_length = isset($_POST['post_length']) ? sanitize_text_field($_POST['post_length']) : 'medio';
 
-        $generated_content = $generator->generate_content($structure, $content_type, $writing_style);
+        $generated_content = $generator->generate_content($structure, $content_type, $writing_style, $post_length);
 
         if ($generated_content) {
             $this->logger->info('Coda Post: Contenido generado, intentando publicar');
             $publisher = new Post_Publisher($this->logger);
-            $post_content = $generated_content['content'] . "\n\n" . $generated_content['key_points'];
-            $post_id = $publisher->publish_post($generated_content['title'], $post_content, $generated_content['excerpt'], 'draft');
+            $post_id = $publisher->publish_post($generated_content['title'], $generated_content['content'], $generated_content['excerpt'], 'draft');
             if ($post_id) {
                 add_post_meta($post_id, '_coda_post_generated', '1', true);
                 $this->logger->info("Coda Post: Borrador creado exitosamente. ID: $post_id");

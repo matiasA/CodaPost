@@ -10,17 +10,15 @@ class Content_Generator {
         $this->logger = $logger;
     }
 
-    public function generate_content($structure, $content_type, $writing_style) {
+    public function generate_content($structure, $content_type, $writing_style, $post_length) {
         $this->logger->info("Content Generator: Iniciando generación de contenido");
         $current_year = date('Y');
         
-        $custom_prompt = get_option('coda_post_custom_prompt', 'Eres un periodista especializado en {content_type}. Quiero que escribas un artículo de máximo 1500 palabras en español al estilo del {writing_style}. El artículo debe tener obligatoriamente un título y al final 3 puntos clave para entender el tema. El artículo debe seguir esta estructura: {structure}. Incluye datos recientes y tendencias actuales del año {current_year} sobre {content_type}.');
-        
-        $prompt = str_replace(
-            ['{content_type}', '{writing_style}', '{structure}', '{current_year}'],
-            [$content_type, $writing_style, $structure, $current_year],
-            $custom_prompt
-        );
+        $prompt = "Eres un periodista especializado en $content_type. Escribe un artículo en español con la siguiente estructura: $structure. 
+                   El estilo de escritura debe ser $writing_style. La longitud del artículo debe ser $post_length. 
+                   Incluye datos recientes y tendencias actuales del año $current_year sobre $content_type. 
+                   El artículo debe tener un título atractivo, contenido detallado y una conclusión. 
+                   Al final, proporciona 3 puntos clave para entender el tema.";
 
         $this->logger->info("Content Generator: Generando contenido completo");
         $full_content = $this->ai_generator->generate_content($prompt);

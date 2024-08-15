@@ -77,15 +77,19 @@ class Admin_Page {
         echo '<form method="post" id="generate-post-form" class="coda-post-form">';
         echo '<input type="hidden" name="coda_post_action" value="generate">';
         
+        // Estructura del post
         echo '<div class="coda-post-form-group">';
         echo '<label for="post_structure">Estructura del post:</label>';
         echo '<select name="post_structure" id="post_structure">';
         echo '<option value="lista">Lista numerada</option>';
         echo '<option value="parrafos">Párrafos</option>';
         echo '<option value="preguntas">Preguntas y respuestas</option>';
+        echo '<option value="guia">Guía paso a paso</option>';
+        echo '<option value="comparacion">Comparación</option>';
         echo '</select>';
         echo '</div>';
 
+        // Tipo de contenido
         echo '<div class="coda-post-form-group">';
         echo '<label for="content_type">Tipo de contenido:</label>';
         echo '<select name="content_type" id="content_type">';
@@ -93,6 +97,32 @@ class Admin_Page {
         echo '<option value="negocios">Negocios</option>';
         echo '<option value="salud">Salud</option>';
         echo '<option value="estilo_vida">Estilo de vida</option>';
+        echo '<option value="ciencia">Ciencia</option>';
+        echo '<option value="entretenimiento">Entretenimiento</option>';
+        echo '<option value="deportes">Deportes</option>';
+        echo '<option value="educacion">Educación</option>';
+        echo '</select>';
+        echo '</div>';
+
+        // Estilo de escritura
+        $writing_styles = get_option('coda_post_writing_styles', ['Formal', 'Informal', 'Académico', 'Periodístico', 'Conversacional']);
+        echo '<div class="coda-post-form-group">';
+        echo '<label for="writing_style">Estilo de escritura:</label>';
+        echo '<select name="writing_style" id="writing_style">';
+        foreach ($writing_styles as $style) {
+            echo '<option value="' . esc_attr($style) . '">' . esc_html($style) . '</option>';
+        }
+        echo '</select>';
+        echo '</div>';
+
+        // Longitud del post
+        echo '<div class="coda-post-form-group">';
+        echo '<label for="post_length">Longitud del post:</label>';
+        echo '<select name="post_length" id="post_length">';
+        echo '<option value="corto">Corto (300-500 palabras)</option>';
+        echo '<option value="medio">Medio (500-800 palabras)</option>';
+        echo '<option value="largo">Largo (800-1200 palabras)</option>';
+        echo '<option value="muy_largo">Muy largo (1200-1500 palabras)</option>';
         echo '</select>';
         echo '</div>';
 
@@ -336,7 +366,9 @@ class Admin_Page {
                         action: 'generate_post_ajax',
                         nonce: '<?php echo wp_create_nonce('generate_post_nonce'); ?>',
                         structure: $('#post_structure').val(),
-                        content_type: $('#content_type').val()
+                        content_type: $('#content_type').val(),
+                        writing_style: $('#writing_style').val(),
+                        post_length: $('#post_length').val()
                     },
                     success: function(response) {
                         if (response.success) {
