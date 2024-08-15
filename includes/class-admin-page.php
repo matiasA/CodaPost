@@ -11,6 +11,15 @@ class Admin_Page {
             'dashicons-admin-post',
             20
         );
+
+        add_submenu_page(
+            'coda-post',
+            'Revisar Posts',
+            'Revisar Posts',
+            'manage_options',
+            'coda-post-review',
+            array($this, 'display_review_page')
+        );
     }
 
     public function display_admin_page() {
@@ -47,9 +56,14 @@ class Admin_Page {
         echo '</div>';
     }
 
+    public function display_review_page() {
+        $post_preview = new Post_Preview();
+        $post_preview->display_preview();
+    }
+
     private function generate_post() {
-        wp_schedule_single_event(time(), 'coda_post_create_post');
-        echo '<div class="updated"><p>Se ha programado la generación de un nuevo post.</p></div>';
+        wp_schedule_single_event(time(), 'coda_post_create_draft');
+        echo '<div class="updated"><p>Se ha programado la generación de un nuevo borrador. Por favor, revise la página "Revisar Posts" en unos momentos.</p></div>';
     }
 
     private function save_settings() {
