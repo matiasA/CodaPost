@@ -43,7 +43,8 @@ class Post_Preview {
     private function display_post_preview($post) {
         echo '<div class="coda-post-preview">';
         echo '<h2>' . esc_html($post->post_title) . '</h2>';
-        echo '<div class="coda-post-content">' . wpautop($post->post_content) . '</div>';
+        echo '<div class="coda-post-meta">Publicado el ' . get_the_date('', $post->ID) . ' | ' . get_the_category_list(', ', '', $post->ID) . '</div>';
+        echo '<div class="coda-post-content">' . $this->format_content($post->post_content) . '</div>';
         echo '<form method="post">';
         echo '<input type="hidden" name="post_id" value="' . $post->ID . '">';
         echo '<input type="submit" name="approve_post" class="button button-primary" value="Aprobar y Publicar">';
@@ -64,5 +65,12 @@ class Post_Preview {
             }
             echo '<div class="updated"><p>Post eliminado.</p></div>';
         }
+    }
+
+    private function format_content($content) {
+        $content = wpautop($content); // Convierte saltos de línea en etiquetas <p>
+        $content = preg_replace('/<h([1-6])>/', '<h$1 class="coda-post-heading">', $content); // Añade clase a los encabezados
+        $content = str_replace('<ul>', '<ul class="coda-post-list">', $content); // Añade clase a las listas
+        return $content;
     }
 }

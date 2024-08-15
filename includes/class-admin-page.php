@@ -59,6 +59,24 @@ class Admin_Page {
         echo '<h2>Generar Post</h2>';
         echo '<form method="post" id="generate-post-form">';
         echo '<input type="hidden" name="coda_post_action" value="generate">';
+        
+        // Añadir selección de estructura
+        echo '<p><label for="post_structure">Estructura del post:</label>';
+        echo '<select name="post_structure" id="post_structure">';
+        echo '<option value="lista">Lista numerada</option>';
+        echo '<option value="parrafos">Párrafos</option>';
+        echo '<option value="preguntas">Preguntas y respuestas</option>';
+        echo '</select></p>';
+
+        // Añadir selección de tipo de contenido
+        echo '<p><label for="content_type">Tipo de contenido:</label>';
+        echo '<select name="content_type" id="content_type">';
+        echo '<option value="tecnologia">Tecnología</option>';
+        echo '<option value="negocios">Negocios</option>';
+        echo '<option value="salud">Salud</option>';
+        echo '<option value="estilo_vida">Estilo de vida</option>';
+        echo '</select></p>';
+
         echo '<p><input type="submit" name="submit" id="submit" class="button button-primary" value="Generar Nuevo Post"></p>';
         echo '</form>';
 

@@ -1,0 +1,43 @@
+.coda-post-preview {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.coda-post-preview h2 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.coda-post-meta {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.coda-post-content {
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.coda-post-heading {
+    color: #444;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.coda-post-list {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.coda-post-preview form {
+    margin-top: 20px;
+}
+
+.coda-post-preview .button {
+    margin-right: 10px;
+}

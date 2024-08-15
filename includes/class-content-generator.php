@@ -10,8 +10,9 @@ class Content_Generator {
         $this->logger = $logger;
     }
 
-    public function generate_content() {
-        $title_prompt = "Genera un título interesante para un artículo de blog.";
+    public function generate_content($structure, $content_type) {
+        $current_year = date('Y');
+        $title_prompt = "Genera un título interesante y actual (del año $current_year) para un artículo de blog sobre $content_type.";
         $title = $this->ai_generator->generate_content($title_prompt);
 
         if (!$title) {
@@ -19,7 +20,10 @@ class Content_Generator {
             return false;
         }
 
-        $content_prompt = "Escribe un artículo de blog detallado sobre el siguiente título: $title. El artículo debe tener aproximadamente 300 palabras.";
+        $content_prompt = "Escribe un artículo de blog detallado y actualizado (del año $current_year) sobre el siguiente título: $title. 
+        El artículo debe tener aproximadamente 300 palabras y seguir esta estructura: $structure. 
+        Incluye datos recientes y tendencias actuales sobre $content_type.";
+        
         $content = $this->ai_generator->generate_content($content_prompt);
 
         if (!$content) {

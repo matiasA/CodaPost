@@ -24,7 +24,8 @@ add_action('admin_enqueue_scripts', function($hook) {
         return;
     }
     wp_enqueue_script('jquery');
-    error_log('Coda Post: Scripts cargados en la página de administración');
+    wp_enqueue_style('coda-post-admin-styles', plugin_dir_url(__FILE__) . 'admin/css/admin.css');
+    error_log('Coda Post: Scripts y estilos cargados en la página de administración');
 });
 
 add_action('wp_ajax_generate_post_ajax', 'coda_post_generate_post_ajax');
