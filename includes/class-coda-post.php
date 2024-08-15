@@ -10,7 +10,7 @@ class Coda_Post {
 
     public function run() {
         $this->set_hooks();
-        $this->logger->info('Coda Post plugin initialized');
+        coda_post_log('Coda Post plugin initialized');
     }
 
     private function load_dependencies() {
@@ -25,7 +25,7 @@ class Coda_Post {
     private function set_hooks() {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('coda_post_create_draft', array($this, 'create_automated_draft'));
-        coda_post_log('Hooks configurados');
+        coda_post_log('Coda Post: Hooks configurados');
     }
 
     public function add_admin_menu() {
