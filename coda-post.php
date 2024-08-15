@@ -10,9 +10,11 @@ if (!defined('ABSPATH')) exit;
 
 require_once plugin_dir_path(__FILE__) . 'includes/class-coda-post-utils.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-coda-post.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-coda-logger.php';
 
 function run_coda_post() {
-    $plugin = new Coda_Post();
+    $logger = new Coda_Logger();
+    $plugin = new Coda_Post($logger);
     $plugin->run();
 }
 
@@ -71,3 +73,13 @@ add_action('init', function() {
         die('Tareas programadas registradas en el log');
     }
 });
+
+function coda_post_log($message) {
+    if (WP_DEBUG === true) {
+        if (is_array($message) || is_object($message)) {
+            error_log(print_r($message, true));
+        } else {
+            error_log($message);
+        }
+    }
+}
