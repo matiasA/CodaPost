@@ -1,6 +1,12 @@
 <?php
 
 class Admin_Page {
+    private $logger;
+
+    public function __construct($logger) {
+        $this->logger = $logger;
+    }
+
     public function add_menu() {
         add_menu_page(
             'Coda Post',
@@ -63,12 +69,14 @@ class Admin_Page {
 
     private function generate_post() {
         wp_schedule_single_event(time(), 'coda_post_create_draft');
+        $this->logger->info('Se ha programado la generación de un nuevo borrador');
         echo '<div class="updated"><p>Se ha programado la generación de un nuevo borrador. Por favor, revise la página "Revisar Posts" en unos momentos.</p></div>';
     }
 
     private function save_settings() {
         if (isset($_POST['openai_api_key'])) {
             update_option('coda_post_openai_api_key', sanitize_text_field($_POST['openai_api_key']));
+            $this->logger->info('Configuración de API key actualizada');
             echo '<div class="updated"><p>Configuración guardada.</p></div>';
         }
     }

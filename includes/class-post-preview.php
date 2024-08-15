@@ -1,6 +1,12 @@
 <?php
 
 class Post_Preview {
+    private $logger;
+
+    public function __construct($logger) {
+        $this->logger = $logger;
+    }
+
     public function display_preview() {
         $draft_posts = get_posts(array(
             'post_status' => 'draft',
@@ -36,9 +42,11 @@ class Post_Preview {
 
         if (isset($_POST['approve_post']) && $_POST['post_id'] == $post->ID) {
             wp_publish_post($post->ID);
+            $this->logger->info("Post ID: {$post->ID} publicado");
             echo '<div class="updated"><p>Post publicado exitosamente.</p></div>';
         } elseif (isset($_POST['delete_post']) && $_POST['post_id'] == $post->ID) {
             wp_delete_post($post->ID, true);
+            $this->logger->info("Post ID: {$post->ID} eliminado");
             echo '<div class="updated"><p>Post eliminado.</p></div>';
         }
     }
