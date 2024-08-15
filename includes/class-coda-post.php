@@ -5,11 +5,17 @@ class Coda_Post {
 
     public function __construct($logger) {
         $this->logger = $logger;
+    }
+
+    public function run() {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('coda_post_create_draft', array($this, 'create_automated_draft'));
         add_action('wp_ajax_coda_post_publish', array($this, 'ajax_publish_post'));
         add_action('wp_ajax_coda_post_delete', array($this, 'ajax_delete_post'));
-        coda_post_log('Coda Post: Hooks configurados');
+        add_action('wp_ajax_generate_post_ajax', array($this, 'generate_post_ajax'));
+        add_action('wp_ajax_nopriv_generate_post_ajax', array($this, 'generate_post_ajax'));
+        
+        $this->logger->info('Coda Post: Hooks configurados');
     }
 
     public function add_admin_menu() {
