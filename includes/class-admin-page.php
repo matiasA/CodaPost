@@ -3,41 +3,59 @@
 class Admin_Page {
     public function add_menu() {
         add_menu_page(
-            'News Updater',
-            'News Updater',
+            'Coda Post',
+            'Coda Post',
             'manage_options',
-            'news-updater',
+            'coda-post',
             array($this, 'display_admin_page'),
-            'dashicons-rss',
+            'dashicons-admin-post',
             20
         );
     }
 
     public function display_admin_page() {
-        if (isset($_POST['news_updater_api_key'])) {
-            update_option('news_updater_api_key', sanitize_text_field($_POST['news_updater_api_key']));
-            update_option('news_updater_topic', sanitize_text_field($_POST['news_updater_topic']));
-            echo '<div class="updated"><p>Configuración guardada.</p></div>';
+        if (isset($_POST['coda_post_action'])) {
+            if ($_POST['coda_post_action'] == 'generate') {
+                $this->generate_post();
+            } elseif ($_POST['coda_post_action'] == 'save_settings') {
+                $this->save_settings();
+            }
         }
 
-        $api_key = get_option('news_updater_api_key');
-        $topic = get_option('news_updater_topic');
+        $api_key = get_option('coda_post_openai_api_key', '');
 
         echo '<div class="wrap">';
-        echo '<h1>Configuración de News Updater</h1>';
+        echo '<h1>Coda Post - Generador de Posts</h1>';
+        
+        echo '<h2>Configuración</h2>';
         echo '<form method="post">';
+        echo '<input type="hidden" name="coda_post_action" value="save_settings">';
         echo '<table class="form-table">';
         echo '<tr>';
-        echo '<th><label for="news_updater_api_key">Clave API de NewsAPI</label></th>';
-        echo '<td><input type="text" id="news_updater_api_key" name="news_updater_api_key" value="' . esc_attr($api_key) . '" class="regular-text"></td>';
-        echo '</tr>';
-        echo '<tr>';
-        echo '<th><label for="news_updater_topic">Tema de noticias</label></th>';
-        echo '<td><input type="text" id="news_updater_topic" name="news_updater_topic" value="' . esc_attr($topic) . '" class="regular-text"></td>';
+        echo '<th><label for="openai_api_key">OpenAI API Key</label></th>';
+        echo '<td><input type="text" id="openai_api_key" name="openai_api_key" value="' . esc_attr($api_key) . '" class="regular-text"></td>';
         echo '</tr>';
         echo '</table>';
-        echo '<p class="submit"><input type="submit" name="submit" id="submit" class="button button-primary" value="Guardar cambios"></p>';
+        echo '<p><input type="submit" name="submit" id="submit" class="button button-primary" value="Guardar Configuración"></p>';
+        echo '</form>';
+
+        echo '<h2>Generar Post</h2>';
+        echo '<form method="post">';
+        echo '<input type="hidden" name="coda_post_action" value="generate">';
+        echo '<p><input type="submit" name="submit" id="submit" class="button button-primary" value="Generar Nuevo Post"></p>';
         echo '</form>';
         echo '</div>';
+    }
+
+    private function generate_post() {
+        wp_schedule_single_event(time(), 'coda_post_create_post');
+        echo '<div class="updated"><p>Se ha programado la generación de un nuevo post.</p></div>';
+    }
+
+    private function save_settings() {
+        if (isset($_POST['openai_api_key'])) {
+            update_option('coda_post_openai_api_key', sanitize_text_field($_POST['openai_api_key']));
+            echo '<div class="updated"><p>Configuración guardada.</p></div>';
+        }
     }
 }
