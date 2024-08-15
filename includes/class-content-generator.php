@@ -3,6 +3,7 @@
 class Content_Generator {
     private $ai_generator;
     private $logger;
+    private $max_content_length = 1500; // Aproximadamente 300 palabras
 
     public function __construct(AI_Generator $ai_generator, $logger) {
         $this->ai_generator = $ai_generator;
@@ -18,7 +19,7 @@ class Content_Generator {
             return false;
         }
 
-        $content_prompt = "Escribe un artículo de blog detallado sobre el siguiente título: $title";
+        $content_prompt = "Escribe un artículo de blog detallado sobre el siguiente título: $title. El artículo debe tener aproximadamente 300 palabras.";
         $content = $this->ai_generator->generate_content($content_prompt);
 
         if (!$content) {
@@ -26,7 +27,13 @@ class Content_Generator {
             return false;
         }
 
-        $excerpt_prompt = "Genera un resumen corto para el siguiente artículo: $content";
+        // Truncar el contenido si excede el límite
+        if (strlen($content) > $this->max_content_length) {
+            $content = substr($content, 0, $this->max_content_length);
+            $content = rtrim($content, ".\n") . "..."; // Asegurar que el contenido termine con una oración completa
+        }
+
+        $excerpt_prompt = "Genera un resumen corto de 50 palabras para el siguiente artículo: $content";
         $excerpt = $this->ai_generator->generate_content($excerpt_prompt);
 
         if (!$excerpt) {
