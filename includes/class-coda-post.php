@@ -44,14 +44,26 @@ class Coda_Post {
         $writing_style = isset($_POST['writing_style']) ? sanitize_text_field($_POST['writing_style']) : 'Formal';
         $post_length = isset($_POST['post_length']) ? sanitize_text_field($_POST['post_length']) : 'medio';
 
+        $generate_image = isset($_POST['generate_image']) ? true : false;
+        $image_style = isset($_POST['image_style']) ? sanitize_text_field($_POST['image_style']) : 'realista';
+
         $generated_content = $generator->generate_content($structure, $content_type, $writing_style, $post_length);
 
         if ($generated_content) {
             $this->logger->info('Coda Post: Contenido generado, intentando publicar');
             $publisher = new Post_Publisher($this->logger);
             $post_id = $publisher->publish_post($generated_content['title'], $generated_content['content'], $generated_content['excerpt'], 'draft');
+            
             if ($post_id) {
                 add_post_meta($post_id, '_coda_post_generated', '1', true);
+                
+                if ($generate_image) {
+                    $image_url = $this->generate_and_attach_image($post_id, $generated_content['title'], $image_style);
+                    if ($image_url) {
+                        set_post_thumbnail($post_id, $image_url);
+                    }
+                }
+                
                 $this->logger->info("Coda Post: Borrador creado exitosamente. ID: $post_id");
                 return $post_id;
             } else {
@@ -61,6 +73,22 @@ class Coda_Post {
             $this->logger->error("Coda Post: No se pudo generar contenido");
         }
 
+        return false;
+    }
+
+    private function generate_and_attach_image($post_id, $title, $style) {
+        $openai = new OpenAI_Generator(get_option('coda_post_openai_api_key'), $this->logger);
+        $prompt = "Genera una imagen $style basada en el siguiente título de artículo: $title";
+        
+        $image_url = $openai->generate_image($prompt);
+        
+        if ($image_url) {
+            $upload = media_sideload_image($image_url, $post_id, $title, 'id');
+            if (!is_wp_error($upload)) {
+                return $upload;
+            }
+        }
+        
         return false;
     }
 

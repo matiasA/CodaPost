@@ -126,6 +126,21 @@ class Admin_Page {
         echo '</select>';
         echo '</div>';
 
+        echo '<div class="coda-post-form-group">';
+        echo '<label for="generate_image">Generar imagen:</label>';
+        echo '<input type="checkbox" name="generate_image" id="generate_image" value="1">';
+        echo '</div>';
+
+        echo '<div class="coda-post-form-group">';
+        echo '<label for="image_style">Estilo de imagen:</label>';
+        echo '<select name="image_style" id="image_style">';
+        echo '<option value="realista">Realista</option>';
+        echo '<option value="ilustracion">Ilustración</option>';
+        echo '<option value="abstracto">Abstracto</option>';
+        echo '<option value="fotografia">Fotografía</option>';
+        echo '</select>';
+        echo '</div>';
+
         echo '<p><input type="submit" name="submit" id="submit" class="button button-primary" value="Generar Nuevo Post"></p>';
         echo '</form>';
         echo '</div>';
@@ -368,7 +383,9 @@ class Admin_Page {
                         structure: $('#post_structure').val(),
                         content_type: $('#content_type').val(),
                         writing_style: $('#writing_style').val(),
-                        post_length: $('#post_length').val()
+                        post_length: $('#post_length').val(),
+                        generate_image: $('#generate_image').is(':checked') ? 1 : 0,
+                        image_style: $('#image_style').val()
                     },
                     success: function(response) {
                         if (response.success) {

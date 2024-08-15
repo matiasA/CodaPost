@@ -114,4 +114,31 @@ class OpenAI_Generator implements AI_Generator {
         $this->logger->error("OpenAI: Respuesta inesperada al obtener modelos: " . print_r($result, true));
         return false;
     }
+
+    public function generate_image($prompt) {
+        $response = wp_remote_post('https://api.openai.com/v1/images/generations', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $this->api_key,
+                'Content-Type' => 'application/json',
+            ],
+            'body' => json_encode([
+                'prompt' => $prompt,
+                'n' => 1,
+                'size' => '1024x1024',
+            ]),
+        ]);
+
+        if (is_wp_error($response)) {
+            $this->logger->error('Error al generar imagen: ' . $response->get_error_message());
+            return false;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if (isset($body['data'][0]['url'])) {
+            return $body['data'][0]['url'];
+        }
+
+        return false;
+    }
 }
