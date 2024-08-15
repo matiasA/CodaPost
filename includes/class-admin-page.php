@@ -2,9 +2,11 @@
 
 class Admin_Page {
     private $logger;
+    private $active_tab;
 
     public function __construct($logger) {
         $this->logger = $logger;
+        $this->active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'generate';
     }
 
     public function add_menu() {
@@ -32,35 +34,37 @@ class Admin_Page {
         echo '<div class="wrap">';
         echo '<h1>Coda Post</h1>';
 
+        $this->display_tabs();
+
         echo '<div class="coda-post-admin">';
         
-        // Configuración de OpenAI
-        echo '<div class="coda-post-section">';
-        echo '<h2>Configuración de OpenAI</h2>';
-        echo '<form method="post" class="coda-post-form">';
-        echo '<input type="hidden" name="coda_post_action" value="save_settings">';
-        
-        $api_key = get_option('coda_post_openai_api_key', '');
-        echo '<div class="coda-post-form-group">';
-        echo '<label for="openai_api_key">API Key de OpenAI:</label>';
-        echo '<input type="text" id="openai_api_key" name="openai_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
-        echo '</div>';
+        switch ($this->active_tab) {
+            case 'generate':
+                $this->display_generate_tab();
+                break;
+            case 'review':
+                $this->display_review_tab();
+                break;
+            case 'settings':
+                $this->display_settings_tab();
+                break;
+        }
 
-        $model = get_option('coda_post_openai_model', 'gpt-4-1106-preview');
-        echo '<div class="coda-post-form-group">';
-        echo '<label for="openai_model">Modelo de OpenAI:</label>';
-        echo '<select name="openai_model" id="openai_model">';
-        echo '<option value="gpt-4-1106-preview"' . selected($model, 'gpt-4-1106-preview', false) . '>GPT-4 Turbo</option>';
-        echo '<option value="gpt-4"' . selected($model, 'gpt-4', false) . '>GPT-4</option>';
-        echo '<option value="gpt-3.5-turbo-1106"' . selected($model, 'gpt-3.5-turbo-1106', false) . '>GPT-3.5 Turbo</option>';
-        echo '</select>';
-        echo '</div>';
+        echo '</div>'; // Fin de coda-post-admin
+        echo '</div>'; // Fin de wrap
 
-        echo '<p><input type="submit" name="submit" id="submit" class="button button-primary" value="Guardar Configuración"></p>';
-        echo '</form>';
-        echo '</div>'; // Fin de la sección de configuración
+        $this->add_admin_scripts();
+    }
 
-        // Generación de Post
+    private function display_tabs() {
+        echo '<h2 class="nav-tab-wrapper">';
+        echo '<a href="?page=coda-post&tab=generate" class="nav-tab ' . ($this->active_tab == 'generate' ? 'nav-tab-active' : '') . '">Generar Post</a>';
+        echo '<a href="?page=coda-post&tab=review" class="nav-tab ' . ($this->active_tab == 'review' ? 'nav-tab-active' : '') . '">Revisar Posts</a>';
+        echo '<a href="?page=coda-post&tab=settings" class="nav-tab ' . ($this->active_tab == 'settings' ? 'nav-tab-active' : '') . '">Configuración</a>';
+        echo '</h2>';
+    }
+
+    private function display_generate_tab() {
         echo '<div class="coda-post-section">';
         echo '<h2>Generar Post</h2>';
         echo '<form method="post" id="generate-post-form" class="coda-post-form">';
@@ -87,18 +91,79 @@ class Admin_Page {
 
         echo '<p><input type="submit" name="submit" id="submit" class="button button-primary" value="Generar Nuevo Post"></p>';
         echo '</form>';
-        echo '</div>'; // Fin de la sección de generación de post
+        echo '</div>';
 
         // Consola de Depuración
         echo '<div class="coda-post-section">';
         echo '<h2>Consola de Depuración</h2>';
         echo '<div id="debug-console"></div>';
-        echo '</div>'; // Fin de la sección de consola de depuración
+        echo '</div>';
+    }
 
-        echo '</div>'; // Fin de coda-post-admin
-        echo '</div>'; // Fin de wrap
+    private function display_review_tab() {
+        echo '<div class="coda-post-section">';
+        echo '<h2>Revisar Posts Generados</h2>';
+        
+        $args = array(
+            'post_type'   => 'post',
+            'post_status' => 'draft',
+            'meta_key'    => '_coda_post_generated',
+            'meta_value'  => '1',
+            'posts_per_page' => -1,
+        );
+        
+        $generated_posts = new WP_Query($args);
 
-        $this->add_admin_scripts();
+        if ($generated_posts->have_posts()) {
+            echo '<table class="wp-list-table widefat fixed striped">';
+            echo '<thead><tr><th>Título</th><th>Fecha</th><th>Acciones</th></tr></thead>';
+            echo '<tbody>';
+            while ($generated_posts->have_posts()) {
+                $generated_posts->the_post();
+                echo '<tr>';
+                echo '<td>' . get_the_title() . '</td>';
+                echo '<td>' . get_the_date() . '</td>';
+                echo '<td>';
+                echo '<a href="' . get_edit_post_link() . '" class="button button-small">Editar</a> ';
+                echo '<a href="' . get_preview_post_link() . '" target="_blank" class="button button-small">Vista previa</a>';
+                echo '</td>';
+                echo '</tr>';
+            }
+            echo '</tbody></table>';
+        } else {
+            echo '<p>No hay posts generados para revisar.</p>';
+        }
+        
+        wp_reset_postdata();
+        
+        echo '</div>';
+    }
+
+    private function display_settings_tab() {
+        echo '<div class="coda-post-section">';
+        echo '<h2>Configuración de OpenAI</h2>';
+        echo '<form method="post" class="coda-post-form">';
+        echo '<input type="hidden" name="coda_post_action" value="save_settings">';
+        
+        $api_key = get_option('coda_post_openai_api_key', '');
+        echo '<div class="coda-post-form-group">';
+        echo '<label for="openai_api_key">API Key de OpenAI:</label>';
+        echo '<input type="text" id="openai_api_key" name="openai_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
+        echo '</div>';
+
+        $model = get_option('coda_post_openai_model', 'gpt-4-1106-preview');
+        echo '<div class="coda-post-form-group">';
+        echo '<label for="openai_model">Modelo de OpenAI:</label>';
+        echo '<select name="openai_model" id="openai_model">';
+        echo '<option value="gpt-4-1106-preview"' . selected($model, 'gpt-4-1106-preview', false) . '>GPT-4 Turbo</option>';
+        echo '<option value="gpt-4"' . selected($model, 'gpt-4', false) . '>GPT-4</option>';
+        echo '<option value="gpt-3.5-turbo-1106"' . selected($model, 'gpt-3.5-turbo-1106', false) . '>GPT-3.5 Turbo</option>';
+        echo '</select>';
+        echo '</div>';
+
+        echo '<p><input type="submit" name="submit" id="submit" class="button button-primary" value="Guardar Configuración"></p>';
+        echo '</form>';
+        echo '</div>';
     }
 
     private function save_settings() {
@@ -157,6 +222,21 @@ class Admin_Page {
                 height: 200px;
                 overflow-y: scroll;
                 font-family: monospace;
+            }
+            /* Estilos para las pestañas */
+            .nav-tab-wrapper {
+                margin-bottom: 20px;
+            }
+            .nav-tab {
+                display: inline-block;
+                margin-right: 20px;
+                text-decoration: none;
+            }
+            .nav-tab-active {
+                background-color: #0073aa;
+                color: #fff;
+                padding: 5px 10px;
+                border-radius: 5px;
             }
         </style>
         <script type="text/javascript">
