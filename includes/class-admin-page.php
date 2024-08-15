@@ -1,5 +1,7 @@
 <?php
 
+require_once plugin_dir_path(__FILE__) . 'class-openai-generator.php';
+
 class Admin_Page {
     private $logger;
     private $active_tab;
@@ -20,7 +22,8 @@ class Admin_Page {
             'manage_options',
             'coda-post',
             array($this, 'display_admin_page'),
-            'dashicons-edit'
+            'dashicons-edit',
+            30
         );
     }
 
