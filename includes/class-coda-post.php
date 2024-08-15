@@ -4,22 +4,22 @@ class Coda_Post {
     private $logger;
 
     public function __construct() {
+        $this->load_dependencies();
         $this->logger = new Coda_Logger();
     }
 
     public function run() {
-        $this->load_dependencies();
         $this->set_hooks();
         $this->logger->info('Coda Post plugin initialized');
     }
 
     private function load_dependencies() {
+        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-coda-logger.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-content-generator.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-openai-generator.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-post-publisher.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-admin-page.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-post-preview.php';
-        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-coda-logger.php';
     }
 
     private function set_hooks() {
