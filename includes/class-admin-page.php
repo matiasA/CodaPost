@@ -39,6 +39,7 @@ class Admin_Page {
         }
 
         $api_key = get_option('coda_post_openai_api_key', '');
+        coda_post_log('API Key actual: ' . ($api_key ? 'Configurada' : 'No configurada'));
 
         echo '<div class="wrap">';
         echo '<h1>Coda Post - Generador de Posts</h1>';
@@ -73,7 +74,11 @@ class Admin_Page {
         wp_schedule_single_event(time(), 'coda_post_create_draft');
         $this->logger->info('Se ha programado la generación de un nuevo borrador');
         coda_post_log('Se ha programado la generación de un nuevo borrador');
-        echo '<div class="updated"><p>Se ha programado la generación de un nuevo borrador. Por favor, revise la página "Revisar Posts" en unos momentos.</p></div>';
+        
+        // Ejecutar la acción inmediatamente después de programarla
+        do_action('coda_post_create_draft');
+        
+        echo '<div class="updated"><p>Se ha iniciado la generación de un nuevo borrador. Por favor, revise la página "Revisar Posts" en unos momentos.</p></div>';
     }
 
     private function save_settings() {
