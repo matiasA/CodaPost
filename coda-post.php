@@ -27,9 +27,18 @@ run_coda_post();
 // Añade esto después de run_coda_post();
 add_action('init', function() {
     if (isset($_GET['test_coda_post'])) {
-        error_log('Coda Post: Iniciando test_coda_post');
+        coda_post_log('Iniciando test_coda_post');
         do_action('coda_post_create_draft');
-        error_log('Coda Post: Finalizando test_coda_post');
+        coda_post_log('Finalizando test_coda_post');
         die('Acción coda_post_create_draft ejecutada');
+    }
+});
+
+// Añade esto para verificar si las tareas programadas se están ejecutando
+add_action('init', function() {
+    if (isset($_GET['check_cron'])) {
+        $cron = _get_cron_array();
+        coda_post_log('Tareas programadas: ' . print_r($cron, true));
+        die('Tareas programadas registradas en el log');
     }
 });

@@ -25,7 +25,7 @@ class Coda_Post {
     private function set_hooks() {
         add_action('admin_menu', array($this, 'add_admin_menu'));
         add_action('coda_post_create_draft', array($this, 'create_automated_draft'));
-        error_log('Coda Post: Hooks configurados');
+        coda_post_log('Hooks configurados');
     }
 
     public function add_admin_menu() {
@@ -34,35 +34,35 @@ class Coda_Post {
     }
 
     public function create_automated_draft() {
-        error_log('Coda Post: Iniciando create_automated_draft');
+        coda_post_log('Iniciando create_automated_draft');
         
         $api_key = get_option('coda_post_openai_api_key', '');
         if (empty($api_key)) {
             $this->logger->error('API key no configurada');
-            error_log('Coda Post: API key no configurada');
+            coda_post_log('API key no configurada');
             return;
         }
 
-        error_log('Coda Post: API key configurada, iniciando generación de contenido');
+        coda_post_log('API key configurada, iniciando generación de contenido');
         $openai_generator = new OpenAI_Generator($api_key, $this->logger);
         $generator = new Content_Generator($openai_generator, $this->logger);
         $content = $generator->generate_content();
 
         if ($content) {
-            error_log('Coda Post: Contenido generado, intentando publicar');
+            coda_post_log('Contenido generado, intentando publicar');
             $publisher = new Post_Publisher($this->logger);
             $post_id = $publisher->publish_post($content, 'draft');
             if ($post_id) {
                 add_post_meta($post_id, '_coda_post_generated', '1', true);
                 $this->logger->info("Borrador creado exitosamente. ID: $post_id");
-                error_log("Coda Post: Borrador creado exitosamente. ID: $post_id");
+                coda_post_log("Borrador creado exitosamente. ID: $post_id");
             } else {
                 $this->logger->error('Error al crear el borrador');
-                error_log("Coda Post: Error al crear el borrador");
+                coda_post_log("Error al crear el borrador");
             }
         } else {
             $this->logger->error('No se pudo generar contenido');
-            error_log("Coda Post: No se pudo generar contenido");
+            coda_post_log("No se pudo generar contenido");
         }
     }
 }

@@ -31,6 +31,7 @@ class Admin_Page {
     public function display_admin_page() {
         if (isset($_POST['coda_post_action'])) {
             if ($_POST['coda_post_action'] == 'generate') {
+                coda_post_log('Acción de generación de post solicitada');
                 $this->generate_post();
             } elseif ($_POST['coda_post_action'] == 'save_settings') {
                 $this->save_settings();
@@ -68,8 +69,10 @@ class Admin_Page {
     }
 
     private function generate_post() {
+        coda_post_log('Iniciando generate_post()');
         wp_schedule_single_event(time(), 'coda_post_create_draft');
         $this->logger->info('Se ha programado la generación de un nuevo borrador');
+        coda_post_log('Se ha programado la generación de un nuevo borrador');
         echo '<div class="updated"><p>Se ha programado la generación de un nuevo borrador. Por favor, revise la página "Revisar Posts" en unos momentos.</p></div>';
     }
 
