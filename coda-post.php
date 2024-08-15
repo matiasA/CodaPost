@@ -90,5 +90,5 @@ function coda_post_log($message) {
 
 // Añade esto para agregar favicon
 add_action('admin_head', function() {
-    echo '<link rel="icon" href="' . plugin_dir_url(__FILE__) . 'assets/icon-32x32.png" />';
+    echo '<link rel="icon" href="' . plugin_dir_url(__FILE__) . 'assets/icon-16x16.png" />';
 });
