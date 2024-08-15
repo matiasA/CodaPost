@@ -31,6 +31,10 @@ class Admin_Page {
     public function display_admin_page() {
         if (isset($_POST['coda_post_action'])) {
             if ($_POST['coda_post_action'] == 'generate') {
+                // Guardar las opciones seleccionadas
+                update_option('coda_post_structure', sanitize_text_field($_POST['post_structure']));
+                update_option('coda_post_content_type', sanitize_text_field($_POST['content_type']));
+                
                 coda_post_log('Acción de generación de post solicitada');
                 $this->generate_post();
             } elseif ($_POST['coda_post_action'] == 'save_settings') {

@@ -47,7 +47,12 @@ class Coda_Post {
         error_log('Coda Post: API key configurada, iniciando generación de contenido');
         $openai_generator = new OpenAI_Generator($api_key, $this->logger);
         $generator = new Content_Generator($openai_generator, $this->logger);
-        $content = $generator->generate_content();
+        
+        // Obtener la estructura y el tipo de contenido de las opciones o usar valores predeterminados
+        $structure = get_option('coda_post_structure', 'parrafos');
+        $content_type = get_option('coda_post_content_type', 'tecnologia');
+        
+        $content = $generator->generate_content($structure, $content_type);
 
         if ($content) {
             error_log('Coda Post: Contenido generado, intentando publicar');
