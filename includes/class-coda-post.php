@@ -39,8 +39,8 @@ class Coda_Post {
             return;
         }
 
-        $openai_generator = new OpenAI_Generator($api_key);
-        $generator = new Content_Generator($openai_generator);
+        $openai_generator = new OpenAI_Generator($api_key, $this->logger);
+        $generator = new Content_Generator($openai_generator, $this->logger);
         $content = $generator->generate_content();
 
         if ($content) {
