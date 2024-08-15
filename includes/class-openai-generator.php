@@ -10,7 +10,7 @@ class OpenAI_Generator implements AI_Generator {
     public function __construct($api_key, $logger) {
         $this->api_key = $api_key;
         $this->logger = $logger;
-        $this->model = 'gpt-4o-mini'; // Actualizado al modelo más reciente
+        $this->model = get_option('coda_post_openai_model', 'gpt-4-0125-preview');
     }
 
     public function generate_content($prompt) {
@@ -63,6 +63,47 @@ class OpenAI_Generator implements AI_Generator {
         }
 
         $this->logger->error("OpenAI: Respuesta inesperada de la API: " . print_r($result, true));
+        return false;
+    }
+
+    public function get_available_models() {
+        $url = 'https://api.openai.com/v1/models';
+
+        $headers = [
+            'Authorization: Bearer ' . $this->api_key
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $response = curl_exec($ch);
+        $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        if (curl_errno($ch)) {
+            $this->logger->error("OpenAI: Error al obtener modelos: " . curl_error($ch));
+            curl_close($ch);
+            return false;
+        }
+
+        curl_close($ch);
+
+        if ($http_status != 200) {
+            $this->logger->error("OpenAI: Error al obtener modelos. Código de estado: $http_status, Respuesta: $response");
+            return false;
+        }
+
+        $result = json_decode($response, true);
+
+        if (isset($result['data'])) {
+            $chat_models = array_filter($result['data'], function($model) {
+                return strpos($model['id'], 'gpt-') === 0;
+            });
+
+            return array_column($chat_models, 'id');
+        }
+
+        $this->logger->error("OpenAI: Respuesta inesperada al obtener modelos: " . print_r($result, true));
         return false;
     }
 }

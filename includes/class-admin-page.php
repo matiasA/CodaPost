@@ -3,10 +3,14 @@
 class Admin_Page {
     private $logger;
     private $active_tab;
+    private $openai_generator;
 
     public function __construct($logger) {
         $this->logger = $logger;
         $this->active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'generate';
+        
+        $api_key = get_option('coda_post_openai_api_key', '');
+        $this->openai_generator = new OpenAI_Generator($api_key, $this->logger);
     }
 
     public function add_menu() {
@@ -151,13 +155,23 @@ class Admin_Page {
         echo '<input type="text" id="openai_api_key" name="openai_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
         echo '</div>';
 
-        $model = get_option('coda_post_openai_model', 'gpt-4o-mini');
+        $current_model = get_option('coda_post_openai_model', 'gpt-4-0125-preview');
+        $available_models = $this->openai_generator->get_available_models();
+
         echo '<div class="coda-post-form-group">';
         echo '<label for="openai_model">Modelo de OpenAI:</label>';
         echo '<select name="openai_model" id="openai_model">';
-        echo '<option value="gpt-4o-mini"' . selected($model, 'gpt-4o-mini', false) . '>gpt-4o-mini (más reciente)</option>';
-        echo '<option value="gpt-4"' . selected($model, 'gpt-4', false) . '>GPT-4</option>';
-        echo '<option value="gpt-3.5-turbo-1106"' . selected($model, 'gpt-3.5-turbo-1106', false) . '>GPT-3.5 Turbo</option>';
+        
+        if ($available_models) {
+            foreach ($available_models as $model) {
+                echo '<option value="' . esc_attr($model) . '"' . selected($current_model, $model, false) . '>' . esc_html($model) . '</option>';
+            }
+        } else {
+            echo '<option value="gpt-4-0125-preview"' . selected($current_model, 'gpt-4-0125-preview', false) . '>GPT-4 Turbo (más reciente)</option>';
+            echo '<option value="gpt-4"' . selected($current_model, 'gpt-4', false) . '>GPT-4</option>';
+            echo '<option value="gpt-3.5-turbo-1106"' . selected($current_model, 'gpt-3.5-turbo-1106', false) . '>GPT-3.5 Turbo</option>';
+        }
+        
         echo '</select>';
         echo '</div>';
 

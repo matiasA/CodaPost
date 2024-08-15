@@ -45,7 +45,9 @@ class Coda_Post {
         }
 
         $this->logger->info('Coda Post: API key configurada, iniciando generación de contenido');
-        $openai_generator = new OpenAI_Generator($api_key, $this->logger, 'gpt-4o-mini');
+        $model = get_option('coda_post_openai_model', 'gpt-4-0125-preview');
+        $openai_generator = new OpenAI_Generator($api_key, $this->logger);
+        $openai_generator->set_model($model);
         $generator = new Content_Generator($openai_generator, $this->logger);
         
         // Obtener la estructura y el tipo de contenido
