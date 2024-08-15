@@ -14,101 +14,151 @@ class Admin_Page {
             'manage_options',
             'coda-post',
             array($this, 'display_admin_page'),
-            'dashicons-admin-post',
-            20
-        );
-
-        add_submenu_page(
-            'coda-post',
-            'Revisar Posts',
-            'Revisar Posts',
-            'manage_options',
-            'coda-post-review',
-            array($this, 'display_review_page')
+            'dashicons-edit'
         );
     }
 
     public function display_admin_page() {
         if (isset($_POST['coda_post_action'])) {
             if ($_POST['coda_post_action'] == 'generate') {
-                // Guardar las opciones seleccionadas
-                update_option('coda_post_structure', sanitize_text_field($_POST['post_structure']));
-                update_option('coda_post_content_type', sanitize_text_field($_POST['content_type']));
-                
-                coda_post_log('Acción de generación de post solicitada');
                 $this->generate_post();
             } elseif ($_POST['coda_post_action'] == 'save_settings') {
                 $this->save_settings();
             }
         }
 
-        $api_key = get_option('coda_post_openai_api_key', '');
-        coda_post_log('API Key actual: ' . ($api_key ? 'Configurada' : 'No configurada'));
+        $this->logger->info('API Key actual: ' . (get_option('coda_post_openai_api_key') ? 'Configurada' : 'No configurada'));
 
         echo '<div class="wrap">';
-        echo '<h1>Coda Post - Generador de Posts</h1>';
-        
-        echo '<h2>Configuración</h2>';
-        echo '<form method="post">';
-        echo '<input type="hidden" name="coda_post_action" value="save_settings">';
-        echo '<table class="form-table">';
-        echo '<tr>';
-        echo '<th><label for="openai_api_key">OpenAI API Key</label></th>';
-        echo '<td><input type="text" id="openai_api_key" name="openai_api_key" value="' . esc_attr($api_key) . '" class="regular-text"></td>';
-        echo '</tr>';
-        echo '</table>';
-        echo '<p><input type="submit" name="submit" id="submit" class="button button-primary" value="Guardar Configuración"></p>';
-        echo '</form>';
+        echo '<h1>Coda Post</h1>';
 
+        echo '<div class="coda-post-admin">';
+        
+        // Configuración de OpenAI
+        echo '<div class="coda-post-section">';
         echo '<h2>Configuración de OpenAI</h2>';
-        echo '<form method="post">';
+        echo '<form method="post" class="coda-post-form">';
         echo '<input type="hidden" name="coda_post_action" value="save_settings">';
         
         $api_key = get_option('coda_post_openai_api_key', '');
-        echo '<p><label for="openai_api_key">API Key de OpenAI:</label>';
-        echo '<input type="text" id="openai_api_key" name="openai_api_key" value="' . esc_attr($api_key) . '" size="40"></p>';
+        echo '<div class="coda-post-form-group">';
+        echo '<label for="openai_api_key">API Key de OpenAI:</label>';
+        echo '<input type="text" id="openai_api_key" name="openai_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
+        echo '</div>';
 
         $model = get_option('coda_post_openai_model', 'gpt-4-1106-preview');
-        echo '<p><label for="openai_model">Modelo de OpenAI:</label>';
+        echo '<div class="coda-post-form-group">';
+        echo '<label for="openai_model">Modelo de OpenAI:</label>';
         echo '<select name="openai_model" id="openai_model">';
-        echo '<option value="gpt-4o-mini"' . selected($model, 'gpt-4o-mini', false) . '>GPT-4 Turbo</option>';
+        echo '<option value="gpt-4-1106-preview"' . selected($model, 'gpt-4-1106-preview', false) . '>GPT-4 Turbo</option>';
         echo '<option value="gpt-4"' . selected($model, 'gpt-4', false) . '>GPT-4</option>';
         echo '<option value="gpt-3.5-turbo-1106"' . selected($model, 'gpt-3.5-turbo-1106', false) . '>GPT-3.5 Turbo</option>';
-        echo '</select></p>';
+        echo '</select>';
+        echo '</div>';
 
         echo '<p><input type="submit" name="submit" id="submit" class="button button-primary" value="Guardar Configuración"></p>';
         echo '</form>';
+        echo '</div>'; // Fin de la sección de configuración
 
+        // Generación de Post
+        echo '<div class="coda-post-section">';
         echo '<h2>Generar Post</h2>';
-        echo '<form method="post" id="generate-post-form">';
+        echo '<form method="post" id="generate-post-form" class="coda-post-form">';
         echo '<input type="hidden" name="coda_post_action" value="generate">';
         
-        // Añadir selección de estructura
-        echo '<p><label for="post_structure">Estructura del post:</label>';
+        echo '<div class="coda-post-form-group">';
+        echo '<label for="post_structure">Estructura del post:</label>';
         echo '<select name="post_structure" id="post_structure">';
         echo '<option value="lista">Lista numerada</option>';
         echo '<option value="parrafos">Párrafos</option>';
         echo '<option value="preguntas">Preguntas y respuestas</option>';
-        echo '</select></p>';
+        echo '</select>';
+        echo '</div>';
 
-        // Añadir selección de tipo de contenido
-        echo '<p><label for="content_type">Tipo de contenido:</label>';
+        echo '<div class="coda-post-form-group">';
+        echo '<label for="content_type">Tipo de contenido:</label>';
         echo '<select name="content_type" id="content_type">';
         echo '<option value="tecnologia">Tecnología</option>';
         echo '<option value="negocios">Negocios</option>';
         echo '<option value="salud">Salud</option>';
         echo '<option value="estilo_vida">Estilo de vida</option>';
-        echo '</select></p>';
+        echo '</select>';
+        echo '</div>';
 
         echo '<p><input type="submit" name="submit" id="submit" class="button button-primary" value="Generar Nuevo Post"></p>';
         echo '</form>';
+        echo '</div>'; // Fin de la sección de generación de post
 
-        // Añadir consola de depuración
-        echo '<h3>Consola de Depuración</h3>';
-        echo '<div id="debug-console" style="background-color: #f0f0f0; border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: scroll; font-family: monospace;"></div>';
+        // Consola de Depuración
+        echo '<div class="coda-post-section">';
+        echo '<h2>Consola de Depuración</h2>';
+        echo '<div id="debug-console"></div>';
+        echo '</div>'; // Fin de la sección de consola de depuración
 
-        // Añadir script JavaScript
+        echo '</div>'; // Fin de coda-post-admin
+        echo '</div>'; // Fin de wrap
+
+        $this->add_admin_scripts();
+    }
+
+    private function save_settings() {
+        if (isset($_POST['openai_api_key'])) {
+            update_option('coda_post_openai_api_key', sanitize_text_field($_POST['openai_api_key']));
+        }
+        if (isset($_POST['openai_model'])) {
+            update_option('coda_post_openai_model', sanitize_text_field($_POST['openai_model']));
+        }
+        echo '<div class="updated"><p>Configuración guardada.</p></div>';
+    }
+
+    private function generate_post() {
+        $this->logger->info('Iniciando generate_post()');
+        wp_schedule_single_event(time(), 'coda_post_create_draft');
+        $this->logger->info('Se ha programado la generación de un nuevo borrador');
+        
+        do_action('coda_post_create_draft');
+        
+        echo '<div class="updated"><p>Se ha iniciado la generación de un nuevo borrador. Por favor, revise la página "Revisar Posts" en unos momentos.</p></div>';
+    }
+
+    private function add_admin_scripts() {
         ?>
+        <style>
+            .coda-post-admin {
+                max-width: 800px;
+                margin: 20px auto;
+            }
+            .coda-post-section {
+                background: #fff;
+                border: 1px solid #ccc;
+                padding: 20px;
+                margin-bottom: 20px;
+                border-radius: 5px;
+            }
+            .coda-post-form-group {
+                margin-bottom: 15px;
+            }
+            .coda-post-form-group label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: bold;
+            }
+            .coda-post-form-group input[type="text"],
+            .coda-post-form-group select {
+                width: 100%;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+            #debug-console {
+                background-color: #f0f0f0;
+                border: 1px solid #ccc;
+                padding: 10px;
+                height: 200px;
+                overflow-y: scroll;
+                font-family: monospace;
+            }
+        </style>
         <script type="text/javascript">
         jQuery(document).ready(function($) {
             var consoleDiv = $('#debug-console');
@@ -124,57 +174,28 @@ class Admin_Page {
                 addConsoleMessage('Iniciando generación de post...');
 
                 $.ajax({
-                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                    url: ajaxurl,
                     type: 'POST',
                     data: {
                         action: 'generate_post_ajax',
-                        nonce: '<?php echo wp_create_nonce('generate_post_nonce'); ?>'
+                        nonce: '<?php echo wp_create_nonce('generate_post_nonce'); ?>',
+                        structure: $('#post_structure').val(),
+                        content_type: $('#content_type').val()
                     },
                     success: function(response) {
-                        console.log('Respuesta AJAX:', response);
                         if (response.success) {
                             addConsoleMessage('Post generado exitosamente. ID: ' + response.data.post_id);
                         } else {
-                            addConsoleMessage('Error: ' + (response.data ? response.data.message : 'Respuesta inesperada del servidor'));
+                            addConsoleMessage('Error: ' + response.data.message);
                         }
                     },
-                    error: function(jqXHR, textStatus, errorThrown) {
-                        console.log('Error AJAX:', jqXHR, textStatus, errorThrown);
-                        addConsoleMessage('Error de conexión al servidor. Estado: ' + textStatus + ', Error: ' + errorThrown);
+                    error: function() {
+                        addConsoleMessage('Error de conexión al servidor.');
                     }
                 });
             });
         });
         </script>
         <?php
-        echo '</div>';
-    }
-
-    public function display_review_page() {
-        $post_preview = new Post_Preview($this->logger);
-        $post_preview->display_preview();
-    }
-
-    private function generate_post() {
-        coda_post_log('Iniciando generate_post()');
-        wp_schedule_single_event(time(), 'coda_post_create_draft');
-        $this->logger->info('Se ha programado la generación de un nuevo borrador');
-        coda_post_log('Se ha programado la generación de un nuevo borrador');
-        
-        // Ejecutar la acción inmediatamente después de programarla
-        do_action('coda_post_create_draft');
-        
-        echo '<div class="updated"><p>Se ha iniciado la generación de un nuevo borrador. Por favor, revise la página "Revisar Posts" en unos momentos.</p></div>';
-    }
-
-    private function save_settings() {
-        if (isset($_POST['openai_api_key'])) {
-            update_option('coda_post_openai_api_key', sanitize_text_field($_POST['openai_api_key']));
-        }
-        if (isset($_POST['openai_model'])) {
-            update_option('coda_post_openai_model', sanitize_text_field($_POST['openai_model']));
-        }
-        $this->logger->info('Configuración de API key actualizada');
-        echo '<div class="updated"><p>Configuración guardada.</p></div>';
     }
 }

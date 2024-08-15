@@ -1,43 +1,39 @@
-.coda-post-preview {
-    background-color: #fff;
-    border: 1px solid #ddd;
+.coda-post-admin {
+    max-width: 800px;
+    margin: 20px auto;
+}
+
+.coda-post-section {
+    background: #fff;
+    border: 1px solid #ccc;
     padding: 20px;
     margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-radius: 5px;
 }
 
-.coda-post-preview h2 {
-    color: #333;
-    font-size: 24px;
-    margin-bottom: 10px;
-}
-
-.coda-post-meta {
-    color: #666;
-    font-size: 14px;
+.coda-post-form-group {
     margin-bottom: 15px;
 }
 
-.coda-post-content {
-    font-size: 16px;
-    line-height: 1.6;
+.coda-post-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
 }
 
-.coda-post-heading {
-    color: #444;
-    margin-top: 20px;
-    margin-bottom: 10px;
+.coda-post-form-group input[type="text"],
+.coda-post-form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 
-.coda-post-list {
-    margin-left: 20px;
-    margin-bottom: 15px;
-}
-
-.coda-post-preview form {
-    margin-top: 20px;
-}
-
-.coda-post-preview .button {
-    margin-right: 10px;
+#debug-console {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 10px;
+    height: 200px;
+    overflow-y: scroll;
+    font-family: monospace;
 }
