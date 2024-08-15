@@ -22,7 +22,7 @@ class Admin_Page {
             'manage_options',
             'coda-post',
             array($this, 'display_admin_page'),
-            'dashicons-edit',
+            plugin_dir_url(__FILE__) . '../assets/icon-32x32.png', // Ajusta la ruta según sea necesario
             30
         );
     }
