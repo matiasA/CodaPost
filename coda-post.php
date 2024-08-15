@@ -3,7 +3,7 @@
  * Plugin Name: Coda Post
  * Description: Generador de posts automatizados para WordPress
  * Version: 1.0
- * Author: Tu Nombre
+ * Author: Cristian Aracena - CODA UNO
  */
 
 if (!defined('ABSPATH')) exit;
