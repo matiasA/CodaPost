@@ -57,10 +57,53 @@ class Admin_Page {
         echo '</form>';
 
         echo '<h2>Generar Post</h2>';
-        echo '<form method="post">';
+        echo '<form method="post" id="generate-post-form">';
         echo '<input type="hidden" name="coda_post_action" value="generate">';
         echo '<p><input type="submit" name="submit" id="submit" class="button button-primary" value="Generar Nuevo Post"></p>';
         echo '</form>';
+
+        // Añadir consola de depuración
+        echo '<h3>Consola de Depuración</h3>';
+        echo '<div id="debug-console" style="background-color: #f0f0f0; border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: scroll; font-family: monospace;"></div>';
+
+        // Añadir script JavaScript
+        ?>
+        <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            var consoleDiv = $('#debug-console');
+
+            function addConsoleMessage(message) {
+                var timestamp = new Date().toLocaleTimeString();
+                consoleDiv.append('<p>[' + timestamp + '] ' + message + '</p>');
+                consoleDiv.scrollTop(consoleDiv[0].scrollHeight);
+            }
+
+            $('#generate-post-form').on('submit', function(e) {
+                e.preventDefault();
+                addConsoleMessage('Iniciando generación de post...');
+
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'generate_post_ajax',
+                        nonce: '<?php echo wp_create_nonce('generate_post_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            addConsoleMessage('Post generado exitosamente. ID: ' + response.data.post_id);
+                        } else {
+                            addConsoleMessage('Error: ' + response.data.message);
+                        }
+                    },
+                    error: function() {
+                        addConsoleMessage('Error de conexión al servidor.');
+                    }
+                });
+            });
+        });
+        </script>
+        <?php
         echo '</div>';
     }
 

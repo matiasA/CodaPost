@@ -36,3 +36,11 @@ add_action('init', function() {
         die('Tareas programadas registradas en el log');
     }
 });
+
+// Añade esto después de run_coda_post();
+add_action('admin_enqueue_scripts', function($hook) {
+    if ('toplevel_page_coda-post' !== $hook) {
+        return;
+    }
+    wp_enqueue_script('jquery');
+});

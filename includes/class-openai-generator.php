@@ -12,7 +12,7 @@ class OpenAI_Generator implements AI_Generator {
     }
 
     public function generate_content($prompt) {
-        coda_post_log("Iniciando generación de contenido con OpenAI");
+        echo "Iniciando generación de contenido con OpenAI\n";
         $url = 'https://api.openai.com/v1/chat/completions';
 
         $headers = [
@@ -30,7 +30,7 @@ class OpenAI_Generator implements AI_Generator {
             'temperature' => 0.7,
         ];
 
-        coda_post_log("Enviando solicitud a OpenAI");
+        echo "Enviando solicitud a OpenAI\n";
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -41,7 +41,7 @@ class OpenAI_Generator implements AI_Generator {
         $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if (curl_errno($ch)) {
-            coda_post_log("Error en la solicitud cURL: " . curl_error($ch));
+            echo "Error en la solicitud cURL: " . curl_error($ch) . "\n";
             curl_close($ch);
             return false;
         }
@@ -49,18 +49,18 @@ class OpenAI_Generator implements AI_Generator {
         curl_close($ch);
 
         if ($http_status != 200) {
-            coda_post_log("Error en la API de OpenAI. Código de estado: $http_status, Respuesta: $response");
+            echo "Error en la API de OpenAI. Código de estado: $http_status\n";
             return false;
         }
 
         $result = json_decode($response, true);
 
         if (isset($result['choices'][0]['message']['content'])) {
-            coda_post_log("Contenido generado exitosamente");
+            echo "Contenido generado exitosamente\n";
             return $result['choices'][0]['message']['content'];
         }
 
-        coda_post_log("Respuesta inesperada de la API de OpenAI: " . print_r($result, true));
+        echo "Respuesta inesperada de la API de OpenAI\n";
         return false;
     }
 }
