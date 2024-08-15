@@ -83,7 +83,7 @@ class Admin_Page {
                 addConsoleMessage('Iniciando generación de post...');
 
                 $.ajax({
-                    url: ajaxurl,
+                    url: '<?php echo admin_url('admin-ajax.php'); ?>',
                     type: 'POST',
                     data: {
                         action: 'generate_post_ajax',
@@ -96,8 +96,9 @@ class Admin_Page {
                             addConsoleMessage('Error: ' + response.data.message);
                         }
                     },
-                    error: function() {
-                        addConsoleMessage('Error de conexión al servidor.');
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        addConsoleMessage('Error de conexión al servidor. Estado: ' + textStatus + ', Error: ' + errorThrown);
+                        console.log(jqXHR);
                     }
                 });
             });

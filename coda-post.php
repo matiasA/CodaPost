@@ -43,4 +43,9 @@ add_action('admin_enqueue_scripts', function($hook) {
         return;
     }
     wp_enqueue_script('jquery');
+    error_log('Coda Post: Scripts cargados en la página de administración');
+});
+
+add_action('wp_ajax_generate_post_ajax', function() {
+    error_log('Coda Post: Acción AJAX recibida');
 });

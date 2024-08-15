@@ -7,6 +7,7 @@ class Coda_Post {
         $this->load_dependencies();
         $this->logger = new Coda_Logger();
         add_action('wp_ajax_generate_post_ajax', array($this, 'generate_post_ajax'));
+        add_action('wp_ajax_nopriv_generate_post_ajax', array($this, 'generate_post_ajax'));
     }
 
     public function run() {
