@@ -28,33 +28,72 @@ class Content_Generator {
             return false;
         }
 
-        // Extraer el título, contenido principal y puntos clave
-        $parts = explode("\n", $full_content, 2);
-        $title = trim($parts[0]);
-        $main_content = trim($parts[1]);
+        $processed_content = $this->process_content($full_content);
 
-        // Extraer los puntos clave
-        $key_points_start = strrpos($main_content, "Puntos clave:");
-        $key_points = "";
-        if ($key_points_start !== false) {
-            $key_points = substr($main_content, $key_points_start);
-            $main_content = trim(substr($main_content, 0, $key_points_start));
+        return $processed_content;
+    }
+
+    private function process_content($content) {
+        $lines = explode("\n", $content);
+        $title = '';
+        $body = '';
+        $excerpt = '';
+        $points = [];
+
+        $in_points = false;
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+
+            // Procesar título
+            if (empty($title) && strpos($line, '#') === 0) {
+                $title = trim(str_replace('#', '', $line));
+                continue;
+            }
+
+            // Procesar puntos clave
+            if (strpos($line, 'Puntos clave') !== false) {
+                $in_points = true;
+                continue;
+            }
+
+            if ($in_points) {
+                if (preg_match('/^\d+\.?\s*(.*)/', $line, $matches)) {
+                    $points[] = $this->clean_text($matches[1]);
+                }
+            } else {
+                $body .= $this->clean_text($line) . "\n\n";
+            }
         }
 
-        // Generar el extracto
-        $excerpt_prompt = "Genera un resumen corto de 50 palabras para el siguiente artículo: $main_content";
-        $excerpt = $this->ai_generator->generate_content($excerpt_prompt);
-
-        if (!$excerpt) {
-            $this->logger->error("Content Generator: No se pudo generar el resumen");
-            return false;
-        }
+        // Extraer el excerpt de las primeras líneas del body
+        $excerpt = $this->extract_excerpt($body);
 
         return [
             'title' => $title,
-            'content' => $main_content,
+            'content' => $body,
             'excerpt' => $excerpt,
-            'key_points' => $key_points
+            'points' => $points
         ];
+    }
+
+    private function clean_text($text) {
+        // Eliminar asteriscos para negrita
+        $text = preg_replace('/\*\*(.*?)\*\*/', '$1', $text);
+        
+        // Eliminar guiones bajos para cursiva
+        $text = preg_replace('/_(.*?)_/', '$1', $text);
+        
+        // Eliminar otros símbolos de Markdown si es necesario
+        // Por ejemplo, para eliminar backticks:
+        // $text = preg_replace('/`(.*?)`/', '$1', $text);
+
+        return $text;
+    }
+
+    private function extract_excerpt($body) {
+        $words = explode(' ', strip_tags($body));
+        return implode(' ', array_slice($words, 0, 55)) . '...';
     }
 }

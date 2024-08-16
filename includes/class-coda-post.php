@@ -55,10 +55,20 @@ class Coda_Post {
         if ($generated_content) {
             $this->logger->info('Coda Post: Contenido generado, intentando publicar');
             $publisher = new Post_Publisher($this->logger);
-            $post_id = $publisher->publish_post($generated_content['title'], $generated_content['content'], $generated_content['excerpt'], 'draft');
+            $post_id = $publisher->publish_post(
+                $generated_content['title'],
+                $generated_content['content'],
+                $generated_content['excerpt'],
+                'draft'
+            );
             
             if ($post_id) {
                 add_post_meta($post_id, '_coda_post_generated', '1', true);
+                
+                // Guardar los puntos clave como metadatos del post
+                if (!empty($generated_content['points'])) {
+                    add_post_meta($post_id, '_coda_post_key_points', $generated_content['points'], true);
+                }
                 
                 if ($generate_image) {
                     $this->logger->info("Iniciando generación de imagen para post ID: $post_id");
