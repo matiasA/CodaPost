@@ -3,11 +3,38 @@
 class Coda_Post {
     private $logger;
     private $style_settings;
+    private $ai_generator;
+    private $content_generator;
 
     public function __construct($logger) {
         $this->logger = $logger;
         $this->style_settings = new Style_Settings();
+        $this->ai_generator = $this->get_selected_ai_generator();
+        $this->content_generator = new Content_Generator($this->ai_generator, $logger);
         add_action('wp_enqueue_scripts', array($this, 'enqueue_custom_styles'));
+    }
+
+    private function get_selected_ai_generator() {
+        $selected_generator = get_option('coda_post_ai_generator', 'openai');
+        $api_key = get_option('coda_post_api_key', '');
+
+        if ($selected_generator === 'openai') {
+            $generator = new OpenAI_Generator($api_key, $this->logger);
+            $model = get_option('coda_post_openai_model', 'gpt-4-0125-preview');
+            $generator->set_model($model);
+            return $generator;
+        } elseif ($selected_generator === 'anthropic') {
+            $generator = new Anthropic_Generator($api_key, $this->logger);
+            $model = get_option('coda_post_anthropic_model', 'claude-2');
+            $generator->set_model($model);
+            return $generator;
+        } else {
+            // Por defecto, usa OpenAI
+            $generator = new OpenAI_Generator($api_key, $this->logger);
+            $model = get_option('coda_post_openai_model', 'gpt-4-0125-preview');
+            $generator->set_model($model);
+            return $generator;
+        }
     }
 
     public function enqueue_custom_styles() {
@@ -36,17 +63,13 @@ class Coda_Post {
     public function create_automated_draft() {
         $this->logger->info('Coda Post: Iniciando create_automated_draft');
         
-        $api_key = get_option('coda_post_openai_api_key', '');
+        $api_key = get_option('coda_post_api_key', '');
         if (empty($api_key)) {
             $this->logger->error('Coda Post: API key no configurada');
             return false;
         }
 
         $this->logger->info('Coda Post: API key configurada, iniciando generación de contenido');
-        $model = get_option('coda_post_openai_model', 'gpt-4-0125-preview');
-        $openai_generator = new OpenAI_Generator($api_key, $this->logger);
-        $openai_generator->set_model($model);
-        $generator = new Content_Generator($openai_generator, $this->logger);
         
         // Obtener los parámetros del formulario
         $structure = isset($_POST['post_structure']) ? sanitize_text_field($_POST['post_structure']) : 'parrafos';
@@ -60,7 +83,7 @@ class Coda_Post {
 
         $this->logger->info("Opciones de imagen: generate=$generate_image, style=$image_style, quality=$image_quality");
 
-        $generated_content = $generator->generate_content($structure, $content_type, $writing_style, $post_length);
+        $generated_content = $this->content_generator->generate_content($structure, $content_type, $writing_style, $post_length);
 
         if ($generated_content) {
             $this->logger->info('Coda Post: Contenido generado, intentando publicar');
@@ -115,14 +138,13 @@ class Coda_Post {
         $this->logger->info("Iniciando generate_and_attach_image para post ID: $post_id");
         $this->logger->info("Título: $title, Estilo: $style, Calidad: $quality");
 
-        $openai = new OpenAI_Generator(get_option('coda_post_openai_api_key'), $this->logger);
         $prompt = "Genera una imagen para un artículo con el siguiente título: $title";
         
         // Mapear estilos del formulario a los estilos de DALL-E 3
         $dalle_style = ($style == 'natural') ? 'natural' : 'vivid';
         
         $this->logger->info("Llamando a generate_image con prompt: $prompt");
-        $image_url = $openai->generate_image($prompt, '1024x1024', $quality, $dalle_style);
+        $image_url = $this->ai_generator->generate_image($prompt, '1024x1024', $quality, $dalle_style);
         
         if ($image_url) {
             $this->logger->info("Imagen generada con éxito. URL: $image_url");
