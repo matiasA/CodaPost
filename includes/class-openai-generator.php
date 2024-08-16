@@ -5,7 +5,8 @@ require_once plugin_dir_path(__FILE__) . 'interface-ai-generator.php';
 class OpenAI_Generator implements AI_Generator {
     private $api_key;
     private $logger;
-    private $model;
+    private $timeout = 30; // Aumentamos el tiempo de espera a 30 segundos
+    private $max_retries = 3; // Número máximo de intentos
 
     public function __construct($api_key, $logger) {
         $this->api_key = $api_key;
@@ -119,35 +120,51 @@ class OpenAI_Generator implements AI_Generator {
         $this->logger->info("Iniciando generación de imagen con prompt: $prompt");
         $this->logger->info("Parámetros: size=$size, quality=$quality, style=$style");
 
-        $response = wp_remote_post('https://api.openai.com/v1/images/generations', [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $this->api_key,
-                'Content-Type' => 'application/json',
-            ],
-            'body' => json_encode([
-                'model' => 'dall-e-3',
-                'prompt' => $prompt,
-                'n' => 1,
-                'size' => $size,
-                'quality' => $quality,
-                'style' => $style,
-            ]),
-        ]);
+        $attempt = 0;
+        while ($attempt < $this->max_retries) {
+            $response = wp_remote_post('https://api.openai.com/v1/images/generations', [
+                'timeout' => $this->timeout,
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->api_key,
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode([
+                    'model' => 'dall-e-3',
+                    'prompt' => $prompt,
+                    'n' => 1,
+                    'size' => $size,
+                    'quality' => $quality,
+                    'style' => $style,
+                ]),
+            ]);
 
-        if (is_wp_error($response)) {
-            $this->logger->error('Error en la solicitud a la API de OpenAI: ' . $response->get_error_message());
-            return false;
+            if (is_wp_error($response)) {
+                $this->logger->error('Error en la solicitud a la API de OpenAI (Intento ' . ($attempt + 1) . '): ' . $response->get_error_message());
+                $attempt++;
+                if ($attempt < $this->max_retries) {
+                    $this->logger->info('Reintentando en 5 segundos...');
+                    sleep(5);
+                }
+                continue;
+            }
+
+            $body = json_decode(wp_remote_retrieve_body($response), true);
+            $this->logger->info('Respuesta de la API de OpenAI: ' . print_r($body, true));
+
+            if (isset($body['data'][0]['url'])) {
+                $this->logger->info('URL de imagen generada: ' . $body['data'][0]['url']);
+                return $body['data'][0]['url'];
+            } else {
+                $this->logger->error('No se encontró URL de imagen en la respuesta de la API');
+                $attempt++;
+                if ($attempt < $this->max_retries) {
+                    $this->logger->info('Reintentando en 5 segundos...');
+                    sleep(5);
+                }
+            }
         }
 
-        $body = json_decode(wp_remote_retrieve_body($response), true);
-        $this->logger->info('Respuesta de la API de OpenAI: ' . print_r($body, true));
-
-        if (isset($body['data'][0]['url'])) {
-            $this->logger->info('URL de imagen generada: ' . $body['data'][0]['url']);
-            return $body['data'][0]['url'];
-        } else {
-            $this->logger->error('No se encontró URL de imagen en la respuesta de la API');
-            return false;
-        }
+        $this->logger->error('No se pudo generar la imagen después de ' . $this->max_retries . ' intentos');
+        return false;
     }
 }

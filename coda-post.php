@@ -6,6 +6,8 @@
  * Author: Cristian Aracena - CODA UNO
  */
 
+set_time_limit(120); // Establece el límite de tiempo de ejecución a 120 segundos
+
 if (!defined('ABSPATH')) exit;
 
 require_once plugin_dir_path(__FILE__) . 'includes/class-coda-post-utils.php';
