@@ -1,19 +1,30 @@
 <?php
 
 require_once plugin_dir_path(__FILE__) . 'class-openai-generator.php';
+require_once plugin_dir_path(__FILE__) . 'class-anthropic-generator.php';
 
 class Admin_Page {
     private $logger;
     private $active_tab;
-    private $openai_generator;
+    private $ai_generator;
     private $style_settings;
 
     public function __construct($logger) {
         $this->logger = $logger;
         $this->active_tab = isset($_GET['tab']) ? $_GET['tab'] : 'generate';
         
-        $api_key = get_option('coda_post_openai_api_key', '');
-        $this->openai_generator = new OpenAI_Generator($api_key, $this->logger);
+        $api_key = get_option('coda_post_api_key', '');
+        $selected_generator = get_option('coda_post_ai_generator', 'openai');
+        
+        if ($selected_generator === 'openai') {
+            $this->ai_generator = new OpenAI_Generator($api_key, $this->logger);
+        } elseif ($selected_generator === 'anthropic') {
+            $this->ai_generator = new Anthropic_Generator($api_key, $this->logger);
+        } else {
+            // Por defecto, usa OpenAI
+            $this->ai_generator = new OpenAI_Generator($api_key, $this->logger);
+        }
+        
         $this->style_settings = new Style_Settings();
     }
 
@@ -38,7 +49,7 @@ class Admin_Page {
             }
         }
 
-        $this->logger->info('API Key actual: ' . (get_option('coda_post_openai_api_key') ? 'Configurada' : 'No configurada'));
+        $this->logger->info('API Key actual: ' . (get_option('coda_post_api_key') ? 'Configurada' : 'No configurada'));
 
         echo '<div class="wrap">';
         echo '<h1>Coda Post</h1>';
@@ -264,18 +275,29 @@ class Admin_Page {
 
     private function display_settings_tab() {
         echo '<div class="coda-post-section">';
-        echo '<h2>Configuración de OpenAI</h2>';
+        echo '<h2>Configuración de IA</h2>';
         echo '<form method="post" class="coda-post-form">';
         echo '<input type="hidden" name="coda_post_action" value="save_settings">';
         
-        $api_key = get_option('coda_post_openai_api_key', '');
+        $api_key = get_option('coda_post_api_key', '');
         echo '<div class="coda-post-form-group">';
-        echo '<label for="openai_api_key">API Key de OpenAI:</label>';
-        echo '<input type="text" id="openai_api_key" name="openai_api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
+        echo '<label for="api_key">API Key:</label>';
+        echo '<input type="text" id="api_key" name="api_key" value="' . esc_attr($api_key) . '" class="regular-text">';
         echo '</div>';
 
+        $selected_generator = get_option('coda_post_ai_generator', 'openai');
+        echo '<div class="coda-post-form-group">';
+        echo '<label for="ai_generator">Proveedor de IA:</label>';
+        echo '<select name="ai_generator" id="ai_generator">';
+        echo '<option value="openai"' . selected($selected_generator, 'openai', false) . '>OpenAI</option>';
+        echo '<option value="anthropic"' . selected($selected_generator, 'anthropic', false) . '>Anthropic</option>';
+        echo '</select>';
+        echo '</div>';
+
+        // Configuración específica de OpenAI
+        echo '<div id="openai_settings" style="display: ' . ($selected_generator === 'openai' ? 'block' : 'none') . ';">';
         $current_model = get_option('coda_post_openai_model', 'gpt-4-0125-preview');
-        $available_models = $this->openai_generator->get_available_models();
+        $available_models = $this->ai_generator instanceof OpenAI_Generator ? $this->ai_generator->get_available_models() : [];
 
         echo '<div class="coda-post-form-group">';
         echo '<label for="openai_model">Modelo de OpenAI:</label>';
@@ -293,18 +315,52 @@ class Admin_Page {
         
         echo '</select>';
         echo '</div>';
+        echo '</div>';
+
+        // Configuración específica de Anthropic
+        echo '<div id="anthropic_settings" style="display: ' . ($selected_generator === 'anthropic' ? 'block' : 'none') . ';">';
+        $anthropic_model = get_option('coda_post_anthropic_model', 'claude-2');
+        echo '<div class="coda-post-form-group">';
+        echo '<label for="anthropic_model">Modelo de Anthropic:</label>';
+        echo '<select name="anthropic_model" id="anthropic_model">';
+        echo '<option value="claude-2"' . selected($anthropic_model, 'claude-2', false) . '>Claude 2</option>';
+        echo '<option value="claude-instant-1"' . selected($anthropic_model, 'claude-instant-1', false) . '>Claude Instant</option>';
+        echo '</select>';
+        echo '</div>';
+        echo '</div>';
 
         echo '<p><input type="submit" name="submit" id="submit" class="button button-primary" value="Guardar Configuración"></p>';
         echo '</form>';
         echo '</div>';
+
+        // Agregar JavaScript para mostrar/ocultar configuraciones específicas
+        echo '<script type="text/javascript">
+        jQuery(document).ready(function($) {
+            $("#ai_generator").change(function() {
+                if ($(this).val() === "openai") {
+                    $("#openai_settings").show();
+                    $("#anthropic_settings").hide();
+                } else if ($(this).val() === "anthropic") {
+                    $("#openai_settings").hide();
+                    $("#anthropic_settings").show();
+                }
+            });
+        });
+        </script>';
     }
 
     private function save_settings() {
-        if (isset($_POST['openai_api_key'])) {
-            update_option('coda_post_openai_api_key', sanitize_text_field($_POST['openai_api_key']));
+        if (isset($_POST['api_key'])) {
+            update_option('coda_post_api_key', sanitize_text_field($_POST['api_key']));
+        }
+        if (isset($_POST['ai_generator'])) {
+            update_option('coda_post_ai_generator', sanitize_text_field($_POST['ai_generator']));
         }
         if (isset($_POST['openai_model'])) {
             update_option('coda_post_openai_model', sanitize_text_field($_POST['openai_model']));
+        }
+        if (isset($_POST['anthropic_model'])) {
+            update_option('coda_post_anthropic_model', sanitize_text_field($_POST['anthropic_model']));
         }
         echo '<div class="updated"><p>Configuración guardada.</p></div>';
     }

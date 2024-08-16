@@ -15,6 +15,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-coda-post.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-coda-logger.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-admin-page.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-openai-generator.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-anthropic-generator.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-content-generator.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-post-publisher.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-style-settings.php';
@@ -95,3 +96,33 @@ function coda_post_log($message) {
 add_action('admin_head', function() {
     echo '<link rel="icon" href="' . plugin_dir_url(__FILE__) . 'assets/icon-16x16.png" />';
 });
+
+// Añade esta función para obtener el generador de AI seleccionado
+function get_selected_ai_generator($logger) {
+    $selected_generator = get_option('coda_post_ai_generator', 'openai');
+    $api_key = get_option('coda_post_api_key', '');
+
+    if ($selected_generator === 'openai') {
+        return new OpenAI_Generator($api_key, $logger);
+    } elseif ($selected_generator === 'anthropic') {
+        return new Anthropic_Generator($api_key, $logger);
+    } else {
+        // Por defecto, usa OpenAI
+        return new OpenAI_Generator($api_key, $logger);
+    }
+}
+
+// Modifica la clase Coda_Post para usar el generador seleccionado
+class Coda_Post {
+    private $logger;
+    private $ai_generator;
+    private $content_generator;
+
+    public function __construct($logger) {
+        $this->logger = $logger;
+        $this->ai_generator = get_selected_ai_generator($logger);
+        $this->content_generator = new Content_Generator($this->ai_generator, $logger);
+    }
+
+    // ... resto de la clase ...
+}

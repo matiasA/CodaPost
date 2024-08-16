@@ -10,6 +10,10 @@ class Content_Generator {
         $this->logger = $logger;
     }
 
+    public function set_ai_generator(AI_Generator $ai_generator) {
+        $this->ai_generator = $ai_generator;
+    }
+
     public function generate_content($structure, $content_type, $writing_style, $post_length) {
         $this->logger->info("Content Generator: Iniciando generación de contenido");
         $current_year = date('Y');
