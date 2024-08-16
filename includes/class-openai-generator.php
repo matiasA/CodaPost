@@ -7,11 +7,11 @@ class OpenAI_Generator implements AI_Generator {
     private $logger;
     private $timeout = 30; // Aumentamos el tiempo de espera a 30 segundos
     private $max_retries = 3; // Número máximo de intentos
+    private $model = 'dall-e-3'; // Añadimos esta línea
 
     public function __construct($api_key, $logger) {
         $this->api_key = $api_key;
         $this->logger = $logger;
-        $this->model = get_option('coda_post_openai_model', 'gpt-4-0125-preview');
     }
 
     public function set_model($model) {
@@ -118,7 +118,7 @@ class OpenAI_Generator implements AI_Generator {
 
     public function generate_image($prompt, $size = '1024x1024', $quality = 'standard', $style = 'vivid') {
         $this->logger->info("Iniciando generación de imagen con prompt: $prompt");
-        $this->logger->info("Parámetros: size=$size, quality=$quality, style=$style");
+        $this->logger->info("Parámetros: size=$size, quality=$quality, style=$style, model={$this->model}");
 
         $attempt = 0;
         while ($attempt < $this->max_retries) {
@@ -129,7 +129,7 @@ class OpenAI_Generator implements AI_Generator {
                     'Content-Type' => 'application/json',
                 ],
                 'body' => json_encode([
-                    'model' => 'dall-e-3',
+                    'model' => $this->model,
                     'prompt' => $prompt,
                     'n' => 1,
                     'size' => $size,
