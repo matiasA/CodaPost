@@ -116,6 +116,9 @@ class OpenAI_Generator implements AI_Generator {
     }
 
     public function generate_image($prompt, $size = '1024x1024', $quality = 'standard', $style = 'vivid') {
+        $this->logger->info("Iniciando generación de imagen con prompt: $prompt");
+        $this->logger->info("Parámetros: size=$size, quality=$quality, style=$style");
+
         $response = wp_remote_post('https://api.openai.com/v1/images/generations', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $this->api_key,
@@ -132,16 +135,18 @@ class OpenAI_Generator implements AI_Generator {
         ]);
 
         if (is_wp_error($response)) {
-            $this->logger->error('Error al generar imagen: ' . $response->get_error_message());
+            $this->logger->error('Error en la solicitud a la API de OpenAI: ' . $response->get_error_message());
             return false;
         }
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
+        $this->logger->info('Respuesta de la API de OpenAI: ' . print_r($body, true));
 
         if (isset($body['data'][0]['url'])) {
+            $this->logger->info('URL de imagen generada: ' . $body['data'][0]['url']);
             return $body['data'][0]['url'];
         } else {
-            $this->logger->error('Respuesta inesperada de la API de OpenAI: ' . print_r($body, true));
+            $this->logger->error('No se encontró URL de imagen en la respuesta de la API');
             return false;
         }
     }

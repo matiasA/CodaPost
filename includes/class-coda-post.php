@@ -48,6 +48,8 @@ class Coda_Post {
         $image_style = isset($_POST['image_style']) ? sanitize_text_field($_POST['image_style']) : 'vivid';
         $image_quality = isset($_POST['image_quality']) ? sanitize_text_field($_POST['image_quality']) : 'standard';
 
+        $this->logger->info("Opciones de imagen: generate=$generate_image, style=$image_style, quality=$image_quality");
+
         $generated_content = $generator->generate_content($structure, $content_type, $writing_style, $post_length);
 
         if ($generated_content) {
@@ -59,9 +61,13 @@ class Coda_Post {
                 add_post_meta($post_id, '_coda_post_generated', '1', true);
                 
                 if ($generate_image) {
-                    $image_url = $this->generate_and_attach_image($post_id, $generated_content['title'], $image_style, $image_quality);
-                    if ($image_url) {
-                        set_post_thumbnail($post_id, $image_url);
+                    $this->logger->info("Iniciando generación de imagen para post ID: $post_id");
+                    $image_id = $this->generate_and_attach_image($post_id, $generated_content['title'], $image_style, $image_quality);
+                    if ($image_id) {
+                        $this->logger->info("Imagen generada y adjuntada. ID de imagen: $image_id");
+                        set_post_thumbnail($post_id, $image_id);
+                    } else {
+                        $this->logger->error("No se pudo generar o adjuntar la imagen");
                     }
                 }
                 
@@ -78,21 +84,30 @@ class Coda_Post {
     }
 
     private function generate_and_attach_image($post_id, $title, $style, $quality) {
+        $this->logger->info("Iniciando generate_and_attach_image para post ID: $post_id");
+        $this->logger->info("Título: $title, Estilo: $style, Calidad: $quality");
+
         $openai = new OpenAI_Generator(get_option('coda_post_openai_api_key'), $this->logger);
         $prompt = "Genera una imagen para un artículo con el siguiente título: $title";
         
         // Mapear estilos del formulario a los estilos de DALL-E 3
-        $dalle_style = ($style == 'realista' || $style == 'fotografia') ? 'natural' : 'vivid';
+        $dalle_style = ($style == 'natural') ? 'natural' : 'vivid';
         
+        $this->logger->info("Llamando a generate_image con prompt: $prompt");
         $image_url = $openai->generate_image($prompt, '1024x1024', $quality, $dalle_style);
         
         if ($image_url) {
+            $this->logger->info("Imagen generada con éxito. URL: $image_url");
+            $this->logger->info("Intentando adjuntar la imagen al post");
             $upload = media_sideload_image($image_url, $post_id, $title, 'id');
             if (!is_wp_error($upload)) {
+                $this->logger->info("Imagen adjuntada exitosamente. ID de adjunto: $upload");
                 return $upload;
             } else {
                 $this->logger->error('Error al adjuntar la imagen: ' . $upload->get_error_message());
             }
+        } else {
+            $this->logger->error('No se pudo generar la imagen');
         }
         
         return false;
