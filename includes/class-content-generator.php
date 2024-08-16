@@ -16,8 +16,8 @@ class Content_Generator {
         
         $prompt = "Eres un periodista especializado en $content_type. Escribe un artículo en español con la siguiente estructura: $structure. 
                    El estilo de escritura debe ser $writing_style. La longitud del artículo debe ser $post_length. 
-                   Incluye datos recientes y tendencias actuales del año $current_year sobre $content_type. 
-                   El artículo debe tener un título atractivo, contenido detallado y una conclusión. 
+                   Incluye datos recientes y tendencias actuales sobre $content_type. 
+                   El artículo debe tener un título atractivo y original (sin mencionar el año actual), contenido detallado y una conclusión. 
                    Al final, proporciona 3 puntos clave para entender el tema.";
 
         $this->logger->info("Content Generator: Generando contenido completo");
@@ -47,13 +47,13 @@ class Content_Generator {
             if (empty($line)) continue;
 
             // Procesar título
-            if (empty($title) && strpos($line, '#') === 0) {
-                $title = trim(str_replace('#', '', $line));
+            if (empty($title)) {
+                $title = $this->clean_text($line);
                 continue;
             }
 
             // Procesar puntos clave
-            if (strpos($line, 'Puntos clave') !== false) {
+            if (strpos(strtolower($line), 'puntos clave') !== false) {
                 $in_points = true;
                 continue;
             }
@@ -65,6 +65,12 @@ class Content_Generator {
             } else {
                 $body .= $this->clean_text($line) . "\n\n";
             }
+        }
+
+        // Si no se encontró un título, usar las primeras palabras del cuerpo
+        if (empty($title)) {
+            $words = explode(' ', strip_tags($body));
+            $title = implode(' ', array_slice($words, 0, 8)) . '...';
         }
 
         // Extraer el excerpt de las primeras líneas del body
