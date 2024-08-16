@@ -17,7 +17,7 @@ class Content_Generator {
         $prompt = "Eres un periodista especializado en $content_type. Escribe un artículo en español con la siguiente estructura: $structure. 
                    El estilo de escritura debe ser $writing_style. La longitud del artículo debe ser $post_length. 
                    Incluye datos recientes y tendencias actuales sobre $content_type. 
-                   El artículo debe tener un título atractivo y original (sin mencionar el año actual), contenido detallado y una conclusión. 
+                   El artículo debe comenzar directamente con un título atractivo y original (sin la palabra 'Título:' y sin mencionar el año actual), seguido del contenido detallado y una conclusión. 
                    Al final, proporciona 3 puntos clave para entender el tema.";
 
         $this->logger->info("Content Generator: Generando contenido completo");
@@ -48,7 +48,7 @@ class Content_Generator {
 
             // Procesar título
             if (empty($title)) {
-                $title = $this->clean_text($line);
+                $title = $this->clean_title($this->clean_text($line));
                 continue;
             }
 
@@ -96,6 +96,24 @@ class Content_Generator {
         // $text = preg_replace('/`(.*?)`/', '$1', $text);
 
         return $text;
+    }
+
+    private function clean_title($title) {
+        // Eliminar la palabra "Título:" al principio si existe
+        $title = preg_replace('/^Título:\s*/i', '', $title);
+
+        // Eliminar el año actual y el próximo del título
+        $current_year = date('Y');
+        $next_year = $current_year + 1;
+        $title = str_replace([$current_year, $next_year], '', $title);
+        
+        // Eliminar cualquier año entre paréntesis
+        $title = preg_replace('/\s*\(\d{4}\)\s*/', '', $title);
+        
+        // Limpiar espacios extra y puntuación al final
+        $title = trim($title, " :-");
+        
+        return $title;
     }
 
     private function extract_excerpt($body) {
