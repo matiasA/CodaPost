@@ -17,6 +17,7 @@ require_once plugin_dir_path(__FILE__) . 'includes/class-admin-page.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-openai-generator.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-content-generator.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-post-publisher.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-style-settings.php';
 
 function run_coda_post() {
     $logger = new Coda_Logger();

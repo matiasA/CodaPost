@@ -2,9 +2,19 @@
 
 class Coda_Post {
     private $logger;
+    private $style_settings;
 
     public function __construct($logger) {
         $this->logger = $logger;
+        $this->style_settings = new Style_Settings();
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_custom_styles'));
+    }
+
+    public function enqueue_custom_styles() {
+        $custom_css = $this->style_settings->get_custom_styles();
+        if (!empty($custom_css)) {
+            wp_add_inline_style('coda-post-styles', $custom_css);
+        }
     }
 
     public function run() {
@@ -64,6 +74,14 @@ class Coda_Post {
             
             if ($post_id) {
                 add_post_meta($post_id, '_coda_post_generated', '1', true);
+                
+                // Aplicar clase CSS personalizada al post generado
+                $post_content = $generated_content['content'];
+                $post_content = '<div class="coda-post-generated">' . $post_content . '</div>';
+                wp_update_post(array(
+                    'ID' => $post_id,
+                    'post_content' => $post_content
+                ));
                 
                 // Guardar los puntos clave como metadatos del post
                 if (!empty($generated_content['points'])) {
