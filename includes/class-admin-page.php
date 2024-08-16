@@ -6,6 +6,7 @@ class Admin_Page {
     private $logger;
     private $active_tab;
     private $openai_generator;
+    private $style_settings;
 
     public function __construct($logger) {
         $this->logger = $logger;
@@ -13,6 +14,7 @@ class Admin_Page {
         
         $api_key = get_option('coda_post_openai_api_key', '');
         $this->openai_generator = new OpenAI_Generator($api_key, $this->logger);
+        $this->style_settings = new Style_Settings();
     }
 
     public function add_menu() {
@@ -55,6 +57,9 @@ class Admin_Page {
             case 'settings':
                 $this->display_settings_tab();
                 break;
+            case 'styles':
+                $this->display_styles_tab();
+                break;
         }
 
         echo '</div>'; // Fin de coda-post-admin
@@ -68,6 +73,7 @@ class Admin_Page {
         echo '<a href="?page=coda-post&tab=generate" class="nav-tab ' . ($this->active_tab == 'generate' ? 'nav-tab-active' : '') . '">Generar Post</a>';
         echo '<a href="?page=coda-post&tab=review" class="nav-tab ' . ($this->active_tab == 'review' ? 'nav-tab-active' : '') . '">Revisar Posts</a>';
         echo '<a href="?page=coda-post&tab=settings" class="nav-tab ' . ($this->active_tab == 'settings' ? 'nav-tab-active' : '') . '">Configuración</a>';
+        echo '<a href="?page=coda-post&tab=styles" class="nav-tab ' . ($this->active_tab == 'styles' ? 'nav-tab-active' : '') . '">Estilos Personalizados</a>';
         echo '</h2>';
     }
 
@@ -408,6 +414,18 @@ class Admin_Page {
             });
         });
         </script>
+        <?php
+    }
+
+    private function display_styles_tab() {
+        ?>
+        <form method="post" action="options.php">
+            <?php
+            settings_fields('coda_post_custom_styles');
+            do_settings_sections('coda-post-styles');
+            submit_button();
+            ?>
+        </form>
         <?php
     }
 }
