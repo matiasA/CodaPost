@@ -1,0 +1,39 @@
+# Entorno virtual
+backend/venv/
+backend/.env
+backend/coda_post_env/
+
+# Archivos de caché de Python
+__pycache__/
+*.py[cod]
+
+# Logs
+*.log
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de IDE
+.vscode/
+.idea/
+
+# Archivos de dependencias
+pip-lock.txt
+
+# Archivos de configuración local
+*.local
+
+# Archivos de base de datos
+*.db
+*.sqlite3
+
+# Archivos de salida
+output/
+dist/
+build/
+
+# Archivos temporales
+*.tmp
+*.bak
+*.swp

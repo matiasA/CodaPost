@@ -1,12 +1,11 @@
 <?php
 
 class Content_Generator {
-    private $ai_generator;
+    private $backend_url = 'http://backend:5000';
     private $logger;
     private $max_content_length = 1500; // Aproximadamente 300 palabras
 
     public function __construct(AI_Generator $ai_generator, $logger) {
-        $this->ai_generator = $ai_generator;
         $this->logger = $logger;
     }
 
@@ -15,26 +14,31 @@ class Content_Generator {
     }
 
     public function generate_content($structure, $content_type, $writing_style, $post_length) {
-        $this->logger->info("Content Generator: Iniciando generación de contenido");
-        $current_year = date('Y');
-        
-        $prompt = "Eres un periodista especializado en $content_type. Escribe un artículo en español con la siguiente estructura: $structure. 
-                   El estilo de escritura debe ser $writing_style. La longitud del artículo debe ser $post_length. 
-                   Incluye datos recientes y tendencias actuales sobre $content_type. 
-                   El artículo debe comenzar directamente con un título atractivo y original (sin la palabra 'Título:' y sin mencionar el año actual), seguido del contenido detallado y una conclusión. 
-                   Al final, proporciona 3 puntos clave para entender el tema.";
+        $this->logger->info("Content Generator: Iniciando generación de contenido con Crew AI");
 
-        $this->logger->info("Content Generator: Generando contenido completo");
-        $full_content = $this->ai_generator->generate_content($prompt);
+        $data = [
+            'topic' => $content_type
+        ];
 
-        if (!$full_content) {
-            $this->logger->error("Content Generator: No se pudo generar el contenido");
+        $response = wp_remote_post($this->backend_url . '/generate_content', [
+            'body' => json_encode($data),
+            'headers' => ['Content-Type' => 'application/json']
+        ]);
+
+        if (is_wp_error($response)) {
+            $this->logger->error("Error al comunicarse con el backend: " . $response->get_error_message());
             return false;
         }
 
-        $processed_content = $this->process_content($full_content);
+        $body = wp_remote_retrieve_body($response);
+        $result = json_decode($body, true);
 
-        return $processed_content;
+        if (!$result || !isset($result['content'])) {
+            $this->logger->error("Respuesta inválida del backend");
+            return false;
+        }
+
+        return $this->process_content($result['content']);
     }
 
     private function process_content($content) {
