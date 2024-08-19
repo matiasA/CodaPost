@@ -12,6 +12,8 @@ if (!defined('ABSPATH')) exit;
 
 require_once plugin_dir_path(__FILE__) . 'includes/class-coda-post-utils.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-coda-post.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-coda-post-activator.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-coda-post-deactivator.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-coda-logger.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-admin-page.php';
 require_once plugin_dir_path(__FILE__) . 'includes/class-openai-generator.php';

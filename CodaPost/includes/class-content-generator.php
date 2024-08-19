@@ -17,12 +17,17 @@ class Content_Generator {
         $this->logger->info("Content Generator: Iniciando generación de contenido con Crew AI");
 
         $data = [
-            'topic' => $content_type
+            'topic' => $content_type,
+            'structure' => $structure,
+            'writing_style' => $writing_style,
+            'post_length' => $post_length,
+            'post_type' => 'artículo de investigación' // Por defecto, podemos cambiarlo si es necesario
         ];
 
         $response = wp_remote_post($this->backend_url . '/generate_content', [
             'body' => json_encode($data),
-            'headers' => ['Content-Type' => 'application/json']
+            'headers' => ['Content-Type' => 'application/json'],
+            'timeout' => 120 // Aumentamos el tiempo de espera a 120 segundos
         ]);
 
         if (is_wp_error($response)) {

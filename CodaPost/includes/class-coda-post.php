@@ -165,17 +165,28 @@ class Coda_Post {
 
     public function generate_post_ajax() {
         check_ajax_referer('generate_post_nonce', 'nonce');
-
+    
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => 'Permisos insuficientes.'));
         }
-
-        $post_id = $this->create_automated_draft();
-
-        if ($post_id) {
-            wp_send_json_success(array('message' => 'Post generado exitosamente', 'post_id' => $post_id));
+    
+        $structure = $_POST['structure'] ?? 'parrafos';
+        $content_type = $_POST['content_type'] ?? 'artículo de investigación';
+        $writing_style = $_POST['writing_style'] ?? 'formal';
+        $post_length = $_POST['post_length'] ?? 'medio';
+    
+        $content_generator = new Content_Generator($this->ai_generator, $this->logger);
+        $content = $content_generator->generate_content($structure, $content_type, $writing_style, $post_length);
+    
+        if ($content) {
+            $post_id = $this->create_post_from_content($content);
+            if ($post_id) {
+                wp_send_json_success(array('message' => 'Post generado exitosamente', 'post_id' => $post_id));
+            } else {
+                wp_send_json_error(array('message' => 'No se pudo crear el post.'));
+            }
         } else {
-            wp_send_json_error(array('message' => 'No se pudo generar el post.'));
+            wp_send_json_error(array('message' => 'No se pudo generar el contenido.'));
         }
     }
 
